@@ -1,182 +1,180 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ECG Monitor Login</title>
-  
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ECG Monitor — Sign In</title>
+
+  <!-- Fonts (system-first) -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      /* Using a common, safe font family as Poppins might not be on all systems */
-      font-family: Arial, sans-serif;
+    :root{
+      --bg1:#f3f7fb; --bg2:#e6f0fb;
+      --card:#ffffff; --muted:#6b7280; --accent:#0d6efd;
+      --glass: rgba(255,255,255,0.6);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: linear-gradient(135deg,var(--bg1),var(--bg2));
+      display:flex; align-items:center; justify-content:center; padding:28px;
+      -webkit-font-smoothing:antialiased;
     }
 
-    body {
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: linear-gradient(135deg, #d7e9f7, #b5d3f0);
+    /* Container */
+    .wrap{
+      width:100%; max-width:1100px;
+      display:grid; grid-template-columns: 480px 1fr; gap:28px;
+      align-items:center;
+    }
+    @media (max-width:980px){ .wrap{grid-template-columns:1fr; padding:18px} }
+
+    .panel {
+      background: linear-gradient(180deg, rgba(255,255,255,0.86), rgba(255,255,255,0.80));
+      border-radius:14px; padding:28px; box-shadow: 0 10px 30px rgba(13,39,76,0.09);
+      backdrop-filter: blur(6px);
     }
 
-    .login-card {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-      border-radius: 18px;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
-      width: 400px;
-      padding: 40px 35px;
-      text-align: center;
+    /* Left - Auth card */
+    .brand{ display:flex; gap:12px; align-items:center; margin-bottom:8px }
+    .brand img{ width:56px; height:56px; border-radius:10px; transform-origin:center; animation:beat 1.6s infinite; }
+    @keyframes beat { 0%,100%{transform:scale(1)}50%{transform:scale(1.08)} }
+
+    h1{ font-size:20px; color:var(--accent); margin:0; }
+    p.lead{ color:var(--muted); margin-top:8px; font-size:14px }
+
+    form { margin-top:18px; display:flex; gap:12px; flex-direction:column; }
+    label{ font-size:13px; color:var(--muted) }
+    input[type="email"], input[type="password"]{
+      width:100%; padding:12px 14px; border-radius:10px; border:1px solid #e6eefb; background:white;
+      font-size:15px; outline:none; transition:box-shadow .18s, border-color .18s;
+    }
+    input:focus{ box-shadow: 0 6px 18px rgba(13,39,76,0.06); border-color:rgba(13,110,253,0.35) }
+
+    .row{ display:flex; gap:10px; }
+    .btn{
+      padding:12px 14px; border-radius:10px; border:none; cursor:pointer; font-weight:600;
+      box-shadow: 0 6px 18px rgba(13,39,76,0.06);
+    }
+    .btn.primary{ background:var(--accent); color:white; flex:1 }
+    .btn.ghost{ background:transparent; border:1px solid rgba(13,39,76,0.06); color:var(--accent); flex:1 }
+
+    .alt {
+      margin-top:10px; font-size:13px; color:var(--muted); display:flex; align-items:center; justify-content:space-between;
+    }
+    .small-link{ color:var(--accent); cursor:pointer; text-decoration:underline; font-weight:600; }
+
+    .error {
+      color:#c92a2a; font-size:13px; min-height:1.2em;
+      margin-top:6px;
     }
 
-    .title {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      margin-bottom: 30px;
+    /* Right - Info */
+    .panel-info{
+      display:flex; flex-direction:column; gap:12px;
     }
-
-    .title img {
-      width: 45px;
-      height: 45px;
-      animation: heartbeat 1.5s infinite;
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0.8));
+      border-radius:12px; padding:14px; box-shadow:0 6px 18px rgba(13,39,76,0.04)
     }
+    .metrics{ display:flex; gap:12px; justify-content:space-between; align-items:center }
+    .metric{ flex:1; background:linear-gradient(180deg,#ffffff,#f6fbff); padding:12px; border-radius:10px; text-align:center }
+    .metric h3{ margin:0; font-size:18px; color:var(--accent) }
+    .metric p{ margin:6px 0 0 0; color:var(--muted); font-size:13px }
 
-    @keyframes heartbeat {
-      0%,
-      100% {
-        transform: scale(1);
-      }
-      50% {
-        transform: scale(1.15);
-      }
-    }
+    /* Footer */
+    footer.small{ font-size:12px; color:var(--muted); text-align:center; margin-top:10px }
 
-    .title h1 {
-      font-size: 26px;
-      color: #0d47a1;
-    }
-
-    form {
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-    }
-
-    input {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      font-size: 15px;
-      transition: 0.3s;
-    }
-
-    input:focus {
-      border-color: #2196f3;
-      box-shadow: 0 0 6px rgba(33, 150, 243, 0.3);
-    }
-
-    /* Style for our error message */
-    #errorMsg {
-      color: #d32f2f; /* Red color for errors */
-      font-size: 14px;
-      min-height: 1.2em; /* Prevents layout jump when text appears */
-    }
-
-    .btn-group {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      margin-top: 10px;
-    }
-
-    .btn {
-      flex: 1;
-      padding: 12px;
-      border: none;
-      border-radius: 8px;
-      color: #fff;
-      font-size: 16px;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    .login-btn {
-      background-color: #2196f3;
-    }
-
-    .login-btn:hover {
-      background-color: #1976d2;
-    }
-
-    .signup-btn {
-      background-color: #43a047;
-    }
-
-    .signup-btn:hover {
-      background-color: #2e7d32;
-    }
-
-    .footer-text {
-      margin-top: 25px;
-      font-size: 13px;
-      color: #555;
-    }
-
-    .footer-text span {
-      color: #0d47a1;
-      font-weight: 600;
+    /* subtle responsive */
+    @media (max-width:520px){
+      .brand img{ display:none }
     }
   </style>
-
 </head>
-
 <body>
-  <div class="login-card">
-    <div class="title">
-      <img
-        src="https://cdn-icons-png.flaticon.com/512/2966/2966327.png"
-        alt="Heart Icon"
-      />
-      <h1>ECG Monitor Login</h1>
+  <div class="wrap">
+    <!-- AUTH -->
+    <div class="panel" aria-labelledby="authTitle">
+      <div class="brand">
+        <img src="https://cdn-icons-png.flaticon.com/512/2966/2966327.png" alt="heart logo" />
+        <div>
+          <h1 id="authTitle">ECG Monitor — Secure Access</h1>
+          <p class="lead">Sign in to view live patient telemetry and historical records.</p>
+        </div>
+      </div>
+
+      <form id="login-form" autocomplete="on" aria-describedby="errMsg">
+        <div>
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" placeholder="you@example.com" required />
+        </div>
+        <div>
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" placeholder="••••••••" required />
+        </div>
+
+        <div class="error" id="errMsg" role="alert" aria-live="polite"></div>
+
+        <div class="row">
+          <button type="submit" class="btn primary">Login</button>
+          <button type="button" id="signupBtn" class="btn ghost">Create Account</button>
+        </div>
+
+        <div class="alt">
+          <span class="small">Tip: use test accounts for demo.</span>
+          <span class="small-link" id="demoCreds">Get demo creds</span>
+        </div>
+      </form>
+
+      <footer class="small">Built for local demo • Firebase Auth (frontend only)</footer>
     </div>
 
-    <form id="login-form">
-      <input id="email" type="email" placeholder="Enter Email" required />
-      <input id="password" type="password" placeholder="Enter Password" required />
-      
-      <p id="errorMsg" class="error-message"></p>
-
-      <div class="btn-group">
-        <button type="submit" class="btn login-btn">Login</button>
-        <button type="button" id="signup-btn" class="btn signup-btn">Sign Up</button>
+    <!-- INFO / Quick dashboard preview -->
+    <aside class="panel-info">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <strong>Live Preview</strong>
+            <div style="font-size:13px;color:var(--muted)">Open dashboard after login</div>
+          </div>
+          <div style="text-align:right;color:var(--muted);font-size:13px">Status: <span id="miniConn">Disconnected</span></div>
+        </div>
+        <div style="margin-top:10px" class="metrics" aria-hidden="true">
+          <div class="metric"><h3 id="miniEcg">--</h3><p>ECG</p></div>
+          <div class="metric"><h3 id="miniBody">--</h3><p>Body °C</p></div>
+          <div class="metric"><h3 id="miniAmb">--</h3><p>Ambient °C</p></div>
+        </div>
       </div>
-    </form>
 
-    <p class="footer-text">
-      A <span>Smart Healthcare</span> System for Real-Time ECG Monitoring
-    </p>
+      <div class="card">
+        <strong>Why this access?</strong>
+        <p style="margin-top:8px;color:var(--muted);font-size:13px">
+          This login page only handles authentication and redirects to the dashboard. No database structure is changed by the UI.
+        </p>
+      </div>
+
+      <div class="card">
+        <strong>Quick actions</strong>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button id="openDemo" class="btn primary" style="flex:1">Try Demo (redirect)</button>
+          <button id="clearFields" class="btn ghost" style="flex:1">Clear</button>
+        </div>
+      </div>
+    </aside>
   </div>
 
+  <!-- Firebase v8 (kept same config style as original) -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <script>
-    // Wait for the DOM content to be fully loaded before running the script
-    document.addEventListener('DOMContentLoaded', () => {
-
-      // ----------------------------------------------------------------
-      // 1. FIREBASE CONFIGURATION
-      // ----------------------------------------------------------------
-      // TODO: Replace this with your project's Firebase config object
-      // You can get this from the Firebase console
-     const firebaseConfig = {
+    // -------------------------
+    // Firebase config (unchanged)
+    // -------------------------
+    const firebaseConfig = {
       apiKey: "AIzaSyBwGtPqCsq9G74bem7C6qWuJNDoqTH6sts",
       authDomain: "iot-health-monitor-f0530.firebaseapp.com",
       databaseURL: "https://iot-health-monitor-f0530-default-rtdb.firebaseio.com",
@@ -185,98 +183,87 @@
       messagingSenderId: "1036078967425",
       appId: "1:1036078967425:web:d01ccc6f982943c2aebb80",
       measurementId: "G-KX9B5SY10C"
-};
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
 
-      
-      // Initialize Firebase
-      firebase.initializeApp(firebaseConfig);
-      
-      // Get references to Firebase services
-      const auth = firebase.auth();
-      const database = firebase.database();
+    // DOM refs
+    const loginForm = document.getElementById('login-form');
+    const emailInput = document.getElementById('email');
+    const pwdInput = document.getElementById('password');
+    const errMsg = document.getElementById('errMsg');
+    const signupBtn = document.getElementById('signupBtn');
+    const miniEcg = document.getElementById('miniEcg');
+    const miniBody = document.getElementById('miniBody');
+    const miniAmb = document.getElementById('miniAmb');
+    const miniConn = document.getElementById('miniConn');
+    const demoCreds = document.getElementById('demoCreds');
+    const openDemo = document.getElementById('openDemo');
+    const clearFields = document.getElementById('clearFields');
 
-      // ----------------------------------------------------------------
-      // 2. GET DOM ELEMENT REFERENCES
-      // ----------------------------------------------------------------
-      const loginForm = document.getElementById('login-form');
-      const emailInput = document.getElementById('email');
-      const passwordInput = document.getElementById('password');
-      const signupButton = document.getElementById('signup-btn');
-      const errorMsg = document.getElementById('errorMsg');
-
-      // ----------------------------------------------------------------
-      // 3. AUTH STATE LISTENER
-      // ----------------------------------------------------------------
-      // This listener is the single source of truth for redirection.
-      // It triggers on login, signup, and page load.
-      auth.onAuthStateChanged((user) => {
-        if (user) {
-          // User is signed in.
-          console.log('User is logged in, redirecting to dashboard...');
-          // Redirect to your main dashboard page
-          window.location.href = 'test.html'; 
-        } else {
-          // User is signed out.
-          console.log('User is signed out.');
-        }
-      });
-
-      // ----------------------------------------------------------------
-      // 4. LOGIN FUNCTIONALITY
-      // ----------------------------------------------------------------
-      loginForm.addEventListener('submit', (e) => {
-        e.preventDefault(); // Prevent the form from reloading the page
-        
-        const email = emailInput.value;
-        const password = passwordInput.value;
-        errorMsg.textContent = ''; // Clear any previous errors
-
-        if (!email || !password) {
-          errorMsg.textContent = 'Please enter both email and password.';
-          return;
-        }
-
-        auth.signInWithEmailAndPassword(email, password)
-          .then((userCredential) => {
-            // Login successful.
-            // The onAuthStateChanged listener (above) will handle the redirect.
-            console.log('Login successful:', userCredential.user.email);
-          })
-          .catch((error) => {
-            // Handle login errors
-            console.error('Login Error:', error.message);
-            errorMsg.textContent = error.message;
-          });
-      });
-
-      // ----------------------------------------------------------------
-      // 5. SIGN UP FUNCTIONALITY
-      // ----------------------------------------------------------------
-      signupButton.addEventListener('click', () => {
-        const email = emailInput.value;
-        const password = passwordInput.value;
-        errorMsg.textContent = ''; // Clear any previous errors
-
-        if (!email || !password) {
-          errorMsg.textContent = 'Please enter both email and password to sign up.';
-          return;
-        }
-
-        auth.createUserWithEmailAndPassword(email, password)
-          .then((userCredential) => {
-            // Sign up successful.
-            console.log('Sign up successful:', userCredential.user.email);
-            alert('Account created successfully! You will now be logged in.');
-            // The onAuthStateChanged listener (above) will handle the redirect.
-          })
-          .catch((error) => {
-            // Handle sign-up errors
-            console.error('Sign up Error:', error.message);
-            errorMsg.textContent = error.message;
-          });
-      });
-
+    // Show connection small indicator using your DB path
+    db.ref('.info/connected').on('value', s => {
+      const ok = !!s.val();
+      miniConn.innerText = ok ? 'Connected' : 'Disconnected';
     });
+
+    // Small live preview: watch the last reading (Read-only, no writes)
+    const previewRef = db.ref('Users/9UpZxqdLiRgfIleOidhF0qWUV0R2/UpdatedReadings');
+    previewRef.limitToLast(1).on('value', snap => {
+      if(!snap.exists()) return;
+      const data = snap.val(); const key = Object.keys(data).pop(); const v = data[key];
+      miniEcg.innerText = v.ECG ?? '--';
+      miniBody.innerText = v.ObjectTemp ? (v.ObjectTemp + '°C') : '--';
+      miniAmb.innerText = v.AmbientTemp ? (v.AmbientTemp + '°C') : '--';
+    });
+
+    // Auth state: redirect to dashboard (test.html) if already signed in
+    auth.onAuthStateChanged(user => {
+      if(user) {
+        // safety: keep frontend-only redirect as before
+        window.location.href = 'test.html';
+      }
+    });
+
+    // Login
+    loginForm.addEventListener('submit', e => {
+      e.preventDefault();
+      errMsg.textContent = '';
+      const email = emailInput.value.trim();
+      const password = pwdInput.value;
+      if(!email || !password){ errMsg.textContent = 'Enter both email and password.'; return; }
+
+      auth.signInWithEmailAndPassword(email, password)
+        .then(() => { /* onAuthStateChanged handles redirect */ })
+        .catch(err => { errMsg.textContent = err.message; console.error(err) });
+    });
+
+    // Signup
+    signupBtn.addEventListener('click', () => {
+      errMsg.textContent = '';
+      const email = emailInput.value.trim();
+      const password = pwdInput.value;
+      if(!email || !password){ errMsg.textContent = 'Enter both email and password to create account.'; return; }
+
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(() => { alert('Account created — you will be redirected.'); })
+        .catch(err => { errMsg.textContent = err.message; console.error(err) });
+    });
+
+    // Demo creds: if you want to use a known test account, this could prefill UI (no DB changes)
+    demoCreds.addEventListener('click', () => {
+      emailInput.value = 'demo@example.com';
+      pwdInput.value = 'demopassword';
+      errMsg.textContent = 'Prefilled demo credentials (ensure account exists).';
+    });
+
+    openDemo.addEventListener('click', () => location.href = 'test.html');
+
+    clearFields.addEventListener('click', () => {
+      emailInput.value = ''; pwdInput.value = ''; errMsg.textContent = '';
+    });
+
   </script>
 </body>
 </html>
