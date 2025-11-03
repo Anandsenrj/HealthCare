@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ECG Monitor Login</title>
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      /* Using a common, safe font family as Poppins might not be on all systems */
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #d7e9f7, #b5d3f0);
+    }
+
+    .login-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 18px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+      width: 400px;
+      padding: 40px 35px;
+      text-align: center;
+    }
+
+    .title {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 30px;
+    }
+
+    .title img {
+      width: 45px;
+      height: 45px;
+      animation: heartbeat 1.5s infinite;
+    }
+
+    @keyframes heartbeat {
+      0%,
+      100% {
+        transform: scale(1);
+      }
+      50% {
+        transform: scale(1.15);
+      }
+    }
+
+    .title h1 {
+      font-size: 26px;
+      color: #0d47a1;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-size: 15px;
+      transition: 0.3s;
+    }
+
+    input:focus {
+      border-color: #2196f3;
+      box-shadow: 0 0 6px rgba(33, 150, 243, 0.3);
+    }
+
+    /* Style for our error message */
+    #errorMsg {
+      color: #d32f2f; /* Red color for errors */
+      font-size: 14px;
+      min-height: 1.2em; /* Prevents layout jump when text appears */
+    }
+
+    .btn-group {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 16px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .login-btn {
+      background-color: #2196f3;
+    }
+
+    .login-btn:hover {
+      background-color: #1976d2;
+    }
+
+    .signup-btn {
+      background-color: #43a047;
+    }
+
+    .signup-btn:hover {
+      background-color: #2e7d32;
+    }
+
+    .footer-text {
+      margin-top: 25px;
+      font-size: 13px;
+      color: #555;
+    }
+
+    .footer-text span {
+      color: #0d47a1;
+      font-weight: 600;
+    }
+  </style>
+
+</head>
+
+<body>
+  <div class="login-card">
+    <div class="title">
+      <img
+        src="https://cdn-icons-png.flaticon.com/512/2966/2966327.png"
+        alt="Heart Icon"
+      />
+      <h1>ECG Monitor Login</h1>
+    </div>
+
+    <form id="login-form">
+      <input id="email" type="email" placeholder="Enter Email" required />
+      <input id="password" type="password" placeholder="Enter Password" required />
+      
+      <p id="errorMsg" class="error-message"></p>
+
+      <div class="btn-group">
+        <button type="submit" class="btn login-btn">Login</button>
+        <button type="button" id="signup-btn" class="btn signup-btn">Sign Up</button>
+      </div>
+    </form>
+
+    <p class="footer-text">
+      A <span>Smart Healthcare</span> System for Real-Time ECG Monitoring
+    </p>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+  <script>
+    // Wait for the DOM content to be fully loaded before running the script
+    document.addEventListener('DOMContentLoaded', () => {
+
+      // ----------------------------------------------------------------
+      // 1. FIREBASE CONFIGURATION
+      // ----------------------------------------------------------------
+      // TODO: Replace this with your project's Firebase config object
+      // You can get this from the Firebase console
+     const firebaseConfig = {
+      apiKey: "AIzaSyBwGtPqCsq9G74bem7C6qWuJNDoqTH6sts",
+      authDomain: "iot-health-monitor-f0530.firebaseapp.com",
+      databaseURL: "https://iot-health-monitor-f0530-default-rtdb.firebaseio.com",
+      projectId: "iot-health-monitor-f0530",
+      storageBucket: "iot-health-monitor-f0530.firebasestorage.app",
+      messagingSenderId: "1036078967425",
+      appId: "1:1036078967425:web:d01ccc6f982943c2aebb80",
+      measurementId: "G-KX9B5SY10C"
+};
+
+      
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      
+      // Get references to Firebase services
+      const auth = firebase.auth();
+      const database = firebase.database();
+
+      // ----------------------------------------------------------------
+      // 2. GET DOM ELEMENT REFERENCES
+      // ----------------------------------------------------------------
+      const loginForm = document.getElementById('login-form');
+      const emailInput = document.getElementById('email');
+      const passwordInput = document.getElementById('password');
+      const signupButton = document.getElementById('signup-btn');
+      const errorMsg = document.getElementById('errorMsg');
+
+      // ----------------------------------------------------------------
+      // 3. AUTH STATE LISTENER
+      // ----------------------------------------------------------------
+      // This listener is the single source of truth for redirection.
+      // It triggers on login, signup, and page load.
+      auth.onAuthStateChanged((user) => {
+        if (user) {
+          // User is signed in.
+          console.log('User is logged in, redirecting to dashboard...');
+          // Redirect to your main dashboard page
+          window.location.href = 'test.html'; 
+        } else {
+          // User is signed out.
+          console.log('User is signed out.');
+        }
+      });
+
+      // ----------------------------------------------------------------
+      // 4. LOGIN FUNCTIONALITY
+      // ----------------------------------------------------------------
+      loginForm.addEventListener('submit', (e) => {
+        e.preventDefault(); // Prevent the form from reloading the page
+        
+        const email = emailInput.value;
+        const password = passwordInput.value;
+        errorMsg.textContent = ''; // Clear any previous errors
+
+        if (!email || !password) {
+          errorMsg.textContent = 'Please enter both email and password.';
+          return;
+        }
+
+        auth.signInWithEmailAndPassword(email, password)
+          .then((userCredential) => {
+            // Login successful.
+            // The onAuthStateChanged listener (above) will handle the redirect.
+            console.log('Login successful:', userCredential.user.email);
+          })
+          .catch((error) => {
+            // Handle login errors
+            console.error('Login Error:', error.message);
+            errorMsg.textContent = error.message;
+          });
+      });
+
+      // ----------------------------------------------------------------
+      // 5. SIGN UP FUNCTIONALITY
+      // ----------------------------------------------------------------
+      signupButton.addEventListener('click', () => {
+        const email = emailInput.value;
+        const password = passwordInput.value;
+        errorMsg.textContent = ''; // Clear any previous errors
+
+        if (!email || !password) {
+          errorMsg.textContent = 'Please enter both email and password to sign up.';
+          return;
+        }
+
+        auth.createUserWithEmailAndPassword(email, password)
+          .then((userCredential) => {
+            // Sign up successful.
+            console.log('Sign up successful:', userCredential.user.email);
+            alert('Account created successfully! You will now be logged in.');
+            // The onAuthStateChanged listener (above) will handle the redirect.
+          })
+          .catch((error) => {
+            // Handle sign-up errors
+            console.error('Sign up Error:', error.message);
+            errorMsg.textContent = error.message;
+          });
+      });
+
+    });
+  </script>
+</body>
+</html>

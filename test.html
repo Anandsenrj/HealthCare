@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Medical IoT — Health Dashboard</title>
+
+<!-- Firebase compat (database) -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
+
+<!-- JustGage + Raphael -->
+<script src="https://cdn.jsdelivr.net/npm/raphael@2.3.0/raphael.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/justgage@1.4.0/justgage.min.js"></script>
+
+<style>
+:root{
+  --accent: #0078d7;
+  --bg: #f5f7fb;
+  --card: #ffffff;
+  --muted: #6b7280;
+  --text: #111;
+  --shadow: 0 6px 18px rgba(18,52,86,0.06);
+}
+body.dark {
+  --bg: #10141b;
+  --card: #1e2632;
+  --text: #e9eef7;
+  --muted: #9ca3af;
+  --shadow: 0 6px 20px rgba(0,0,0,0.3);
+}
+body {
+  font-family: "Segoe UI", Roboto, Arial;
+  background: var(--bg);
+  color: var(--text);
+  margin: 0;
+  transition: background 0.3s, color 0.3s;
+}
+header {
+  background: var(--card);
+  border-bottom: 1px solid #e6eefb;
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: var(--shadow);
+}
+header h1 { margin: 0; font-size: 20px; color: var(--accent); }
+.toggle {
+  border: 1px solid #ccc;
+  background: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 14px;
+}
+.toggle:hover { background: rgba(0,0,0,0.05); }
+
+.wrapper { padding: 18px; }
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 18px;
+}
+@media(max-width:900px){
+  .grid{ grid-template-columns: 1fr; }
+}
+.card {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: var(--shadow);
+  transition: background 0.3s, box-shadow 0.3s;
+}
+.wide { grid-column: 1/-1; }
+.small { font-size: 13px; color: var(--muted); }
+.values {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+.valbox {
+  flex: 1; background: rgba(0,0,0,0.03);
+  padding: 10px; border-radius: 8px; text-align: center;
+}
+.valbox h4 { margin: 0; font-size: 13px; color: var(--muted); }
+.valbox p { margin: 6px 0 0; font-size: 18px; color: var(--accent); font-weight: 600; }
+.status {
+  display:flex; gap:8px; align-items:center;
+}
+.dot {
+  width:12px;height:12px;border-radius:50%;
+  background:#f3f3f3; border:1px solid #ccc;
+  transition: background 0.3s, box-shadow 0.3s;
+}
+.connected { background:#14a44d !important; box-shadow:0 0 8px #14a44d88; }
+
+.gauges{display:flex; flex-direction:column; align-items:center; gap:12px;}
+.btn {
+  background: var(--accent); color:white; border:none;
+  padding:8px 12px; border-radius:8px; cursor:pointer;
+  transition:background 0.2s;
+}
+.btn:hover{background:#005fa3;}
+.controls {
+  display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:10px;
+}
+.controls input, .controls select {
+  padding:8px;border-radius:6px;border:1px solid #ddd;
+  background:var(--card); color:var(--text);
+}
+.loading-shimmer {
+  text-align:center; color:var(--muted);
+  font-size:14px; margin-top:10px; display:none;
+}
+footer {
+  text-align:center; margin-top:18px;
+  color:var(--muted); font-size:13px;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <img src="https://cdn-icons-png.flaticon.com/512/2966/2966483.png" alt="logo" style="width:40px;height:40px;">
+  <h1>Patient Monitoring — Medical Dashboard</h1>
+  <div style="flex:1"></div>
+  <button id="themeToggle" class="toggle">🌙 Dark</button>
+  <div class="status">
+    <div class="dot" id="connDot"></div>
+    <span id="connText" class="small">Disconnected</span>
+  </div>
+</header>
+
+<div class="wrapper">
+  <div class="grid">
+    <!-- Live ECG -->
+    <div class="card">
+      <h3 style="margin:0 0 8px 0;">Live ECG</h3>
+      <div class="small">Real-time ECG waveform updates as the device sends new data.</div>
+      <canvas id="ecgCanvas"></canvas>
+      <div class="values">
+        <div class="valbox"><h4>Latest ECG</h4><p id="latestEcg">--</p></div>
+        <div class="valbox"><h4>Last Update</h4><p id="lastUpdate">--</p></div>
+      </div>
+    </div>
+
+    <!-- Temperatures -->
+    <div class="card">
+      <h3 style="margin:0 0 8px 0;">Temperatures</h3>
+      <div class="small">Body (MLX object) and ambient readings in °C.</div>
+      <div class="gauges" style="margin-top:12px">
+        <div id="gBody" style="width:260px;height:180px;"></div>
+        <div id="gAmb" style="width:260px;height:180px;"></div>
+      </div>
+      <div style="margin-top:12px">
+        <div style="display:flex; justify-content:space-between;">
+          <div class="small">Body Temp</div>
+          <div id="numBody" style="font-weight:700; color:var(--accent)">-- °C</div>
+          <div id="tempAlert" class="small" style="color:#ff3300; font-weight:600; display:none;">
+  ⚠️ High Temperature Detected (>38°C)
+</div>
+
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-top:6px;">
+          <div class="small">Ambient Temp</div>
+          <div id="numAmb" style="font-weight:700; color:var(--accent)">-- °C</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Past Records -->
+    <div class="card wide">
+      <h3 style="margin:0 0 8px 0;">Past Records — Time Window Viewer</h3>
+      <div class="small">Select a time window or preset to plot ECG & temperatures.</div>
+      <div class="controls">
+        <label class="small">Start</label><input id="startDT" type="datetime-local"/>
+        <label class="small">End</label><input id="endDT" type="datetime-local"/>
+        <select id="preset">
+          <option value="">Presets</option>
+          <option value="5">Last 5 minutes</option>
+          <option value="10">Last 10 minutes</option>
+          <option value="15">Last 15 minutes</option>
+          <option value="30">Last 30 minutes</option>
+        </select>
+        <button id="loadBtn" class="btn">Load</button>
+        <button id="refreshBtn" class="btn" style="background:#2a9d8f">Refresh Live</button>
+      </div>
+      <div id="loader" class="loading-shimmer">Loading past records...</div>
+      <canvas id="historyCanvas" style="margin-top:12px;"></canvas>
+    </div>
+  </div>
+
+  <footer>⚙️ Local demo • Designed for IoT-based health monitoring • Built with Firebase + Chart.js</footer>
+</div>
+
+<script>
+// ========== Firebase Configuration ==========
+const firebaseConfig = {
+  apiKey: "AIzaSyBwGtPqCsq9G74bem7C6qWuJNDoqTH6sts",
+  authDomain: "iot-health-monitor-f0530.firebaseapp.com",
+  databaseURL: "https://iot-health-monitor-f0530-default-rtdb.firebaseio.com",
+  projectId: "iot-health-monitor-f0530",
+  storageBucket: "iot-health-monitor-f0530.firebasestorage.app",
+  messagingSenderId: "1036078967425",
+  appId: "1:1036078967425:web:d01ccc6f982943c2aebb80"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// ========== UI References ==========
+const connDot = document.getElementById('connDot');
+const connText = document.getElementById('connText');
+const loader = document.getElementById('loader');
+
+// Theme toggle
+document.getElementById('themeToggle').onclick = () => {
+  document.body.classList.toggle('dark');
+  const dark = document.body.classList.contains('dark');
+  document.getElementById('themeToggle').innerText = dark ? '☀️ Light' : '🌙 Dark';
+};
+
+// Gauges
+const gBody = new JustGage({ id:'gBody', value:0, min:20, max:45, title:'Body Temp (°C)',
+  levelColors:['#00cc66','#ffcc00','#ff3300'], relativeGaugeSize:true });
+const gAmb = new JustGage({ id:'gAmb', value:0, min:0, max:50, title:'Ambient (°C)',
+  levelColors:['#00cc66','#ffcc00','#ff3300'], relativeGaugeSize:true });
+
+// Charts
+const ecgChart = new Chart(document.getElementById('ecgCanvas').getContext('2d'), {
+  type:'line',
+  data:{labels:[],datasets:[{label:'ECG',data:[],borderColor:'#d33',tension:0.2,pointRadius:0}]},
+  options:{animation:false,responsive:true,scales:{x:{display:false},y:{min:0,max:1024}},plugins:{legend:{display:false}}}
+});
+const historyChart = new Chart(document.getElementById('historyCanvas').getContext('2d'), {
+  type:'line',
+  data:{labels:[],datasets:[
+    {label:'ECG',data:[],borderColor:'#d33',tension:0.2,pointRadius:0,yAxisID:'y'},
+    {label:'Body Temp',data:[],borderColor:'#0078d7',tension:0.3,pointRadius:2,yAxisID:'y1'},
+    {label:'Ambient Temp',data:[],borderColor:'#00a884',tension:0.3,pointRadius:2,yAxisID:'y1'}]},
+  options:{responsive:true,interaction:{mode:'index'},scales:{
+    y:{type:'linear',position:'left',min:0,max:110},
+    y1:{type:'linear',position:'right',min:0,max:50,grid:{drawOnChartArea:false}}}}
+});
+
+// Connection indicator
+function setConnected(ok){
+  connDot.classList.toggle('connected', ok);
+  connText.innerText = ok ? 'Connected' : 'Disconnected';
+}
+db.ref('.info/connected').on('value', s => setConnected(!!s.val()));
+
+// Firebase live data
+const ref = db.ref('Users/9UpZxqdLiRgfIleOidhF0qWUV0R2/UpdatedReadings');
+ref.limitToLast(1).on('value', snap=>{
+  if(!snap.exists()) return;
+  const data = snap.val();
+  const key = Object.keys(data).pop();
+  const v = data[key];
+  const t = new Date();
+  document.getElementById('lastUpdate').innerText = t.toLocaleTimeString();
+  document.getElementById('latestEcg').innerText = v.ECG ?? '--';
+if(v.ObjectTemp){
+  const bodyTemp = v.ObjectTemp;
+  gBody.refresh(bodyTemp);
+  const numBody = document.getElementById('numBody');
+  const alertBox = document.getElementById('tempAlert');
+  
+  numBody.innerText = bodyTemp + ' °C';
+
+  if(bodyTemp > 38){
+    numBody.style.color = '#ff3300';
+    alertBox.style.display = 'block';
+  } else {
+    numBody.style.color = 'var(--accent)';
+    alertBox.style.display = 'none';
+  }
+}
+  if(v.AmbientTemp){ gAmb.refresh(v.AmbientTemp); document.getElementById('numAmb').innerText=v.AmbientTemp+' °C'; }
+  if(v.ECG!=null){
+    ecgChart.data.labels.push(t.toLocaleTimeString());
+    ecgChart.data.datasets[0].data.push(v.ECG);
+    if(ecgChart.data.labels.length>300){ ecgChart.data.labels.shift(); ecgChart.data.datasets[0].data.shift(); }
+    ecgChart.update('none');
+  }
+});
+
+// Load history
+async function loadRange(start,end){
+  loader.style.display='block';
+  const snap=await ref.get();
+  loader.style.display='none';
+  if(!snap.exists()){alert('No data found.');return;}
+  const data=snap.val();
+  const labels=[],ecg=[],body=[],amb=[];
+  for(const [k,v] of Object.entries(data)){
+    const d=new Date(k.replace(/_/g,' ').replace(/-/g,':'));
+    if(d>=start&&d<=end){
+      labels.push(d.toLocaleTimeString());
+      ecg.push(v.ECG??null);
+      body.push(v.ObjectTemp??null);
+      amb.push(v.AmbientTemp??null);
+    }
+  }
+  historyChart.data.labels=labels;
+  historyChart.data.datasets[0].data=ecg;
+  historyChart.data.datasets[1].data=body;
+  historyChart.data.datasets[2].data=amb;
+  historyChart.update();
+}
+
+// Presets
+document.getElementById('preset').onchange=e=>{
+  const mins=+e.target.value; if(!mins) return;
+  const now=new Date(), start=new Date(now.getTime()-mins*60000);
+  const fmt=d=>d.toISOString().slice(0,16);
+  startDT.value=fmt(start); endDT.value=fmt(now);
+};
+document.getElementById('loadBtn').onclick=()=>{
+  const s=new Date(startDT.value), e=new Date(endDT.value);
+  if(isNaN(s)||isNaN(e)||s>=e){alert('Invalid range');return;}
+  loadRange(s,e);
+};
+document.getElementById('refreshBtn').onclick=()=>{
+  ecgChart.data.labels=[]; ecgChart.data.datasets[0].data=[]; ecgChart.update();
+  historyChart.data.labels=[]; historyChart.data.datasets.forEach(ds=>ds.data=[]); historyChart.update();
+};
+</script>
+</body>
+</html>
