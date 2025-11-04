@@ -8,400 +8,395 @@
 <!-- Firebase compat (database) -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
 
-<!-- JustGage + Raphael (same utils) -->
+<!-- JustGage + Raphael for gauges -->
 <script src="https://cdn.jsdelivr.net/npm/raphael@2.3.0/raphael.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/justgage@1.4.0/justgage.min.js"></script>
 
 <style>
   :root{
-    --bg:#f4f7fb; --card:#fff; --muted:#6b7280; --accent:#0078d7; --success:#14a44d;
-    --glass: rgba(255,255,255,0.7);
+    --accent: #0078d7;
+    --muted:#6b7280;
+    --bg:#f4f7fb;
+    --card:#ffffff;
   }
-  body.dark { --bg:#0f1720; --card:#111827; --muted:#9ca3af; --accent:#3b82f6; --glass: rgba(255,255,255,0.03) }
-  *{box-sizing:border-box}
-  body{ margin:0; font-family: Inter, system-ui, "Segoe UI", Roboto; background:var(--bg); color:var(--text, #111); transition: background 0.25s, color 0.25s; }
-
-  header{
-    display:flex; align-items:center; gap:14px; padding:14px 20px; background:var(--card);
-    box-shadow: 0 6px 18px rgba(13,39,76,0.06); position:sticky; top:0; z-index:10;
-  }
-  header h1{ margin:0; font-size:18px; color:var(--accent) }
-  .controls { margin-left:auto; display:flex; gap:8px; align-items:center }
-
-  .toggle, .btn { padding:8px 12px; border-radius:8px; border:none; cursor:pointer }
-  .toggle { background:transparent; border:1px solid rgba(13,39,76,0.06) }
-
-  .layout { padding:18px; display:grid; grid-template-columns: 1fr 340px; gap:18px; }
-  @media(max-width:1000px){ .layout{ grid-template-columns: 1fr } }
-
-  .card{ background:var(--card); border-radius:12px; padding:12px; box-shadow: 0 6px 18px rgba(13,39,76,0.06); }
-  .wide{ grid-column: 1/-1 }
-
-  /* Live ECG area */
-  #ecgCanvas { width:100%; height:220px; display:block }
-  .values{ display:flex; gap:12px; margin-top:12px; flex-wrap:wrap }
-  .valbox{ flex:1; background:linear-gradient(180deg, rgba(0,0,0,0.03), transparent); border-radius:10px; padding:10px; text-align:center }
-  .valbox h4{ margin:0; font-size:13px; color:var(--muted) }
-  .valbox p{ margin:8px 0 0; font-size:16px; font-weight:700; color:var(--accent) }
-
-  /* gauges */
-  .gauges{ display:flex; gap:10px; flex-direction:column; align-items:center; padding-top:6px }
-  @media(min-width:900px){ .gauges{ flex-direction:column } }
-
-  /* controls */
-  .controlsbar{ display:flex; gap:10px; margin-top:10px; flex-wrap:wrap; align-items:center }
-  .controlsbar input, .controlsbar select{ padding:8px;border-radius:8px;border:1px solid #e6eefb; background:var(--card) }
-
-  /* connection indicator */
-  .conn { display:flex; gap:10px; align-items:center }
-  .dot{ width:12px;height:12px;border-radius:50%; background:#f3f3f3; border:1px solid #ccc; transition: box-shadow .3s, transform .3s; }
-  .connected{ background: var(--success); box-shadow: 0 0 10px rgba(20,164,77,0.25); transform:scale(1.05); }
-
-  /* history canvas */
-  #historyCanvas{ width:100%; height:260px; display:block }
-
-  /* footer */
-  footer{ text-align:center; color:var(--muted); margin-top:18px; font-size:13px }
-
-  /* responsive tweaks */
-  @media(max-width:600px){
-    .valbox p{ font-size:15px }
-  }
-
+  body{font-family: "Segoe UI", Roboto, Arial; margin:0; background:var(--bg); color:#111}
+  header{background:var(--card); border-bottom:1px solid #e6eefb; padding:18px 24px; display:flex; align-items:center; gap:20px;}
+  header h1{margin:0; font-size:20px; color:var(--accent)}
+  .wrapper{padding:18px;}
+  .grid{display:grid; grid-template-columns: 1fr 360px; gap:18px; align-items:start;}
+  .card{background:var(--card); border-radius:12px; padding:16px; box-shadow:0 6px 18px rgba(18,52,86,0.06);}
+  .wide{grid-column:1/-1}
+  .status{display:flex; gap:12px; align-items:center}
+  .status .dot{width:12px;height:12px;border-radius:50%; background:#f3f3f3; border:1px solid #ccc}
+  .stat{display:flex; gap:8px; align-items:center; font-size:14px; color:var(--muted)}
+  .gauges{display:flex; flex-direction:column; gap:12px; align-items:center}
+  #ecgCanvas{height:300px !important; width:100%;}
+  #historyCanvas{height:300px !important; width:100%;}
+  .controls{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; align-items:center; justify-content:center}
+  .controls input[type="datetime-local"]{padding:8px;border-radius:6px;border:1px solid #ddd}
+  .controls select{padding:8px;border-radius:6px;border:1px solid #ddd}
+  .btn{background:var(--accent); color:white; padding:8px 12px; border-radius:8px; border:none; cursor:pointer}
+  .small{font-size:13px; color:var(--muted)}
+  footer{margin-top:18px;text-align:center;color:var(--muted); font-size:13px}
+  .values{display:flex; gap:12px; justify-content:space-between; margin-top:8px}
+  .valbox{flex:1; background:#fafbff; padding:10px; border-radius:8px; text-align:center}
+  .valbox h4{margin:0; font-size:13px; color:var(--muted)}
+  .valbox p{margin:6px 0 0; font-size:18px; color:var(--accent); font-weight:600}
 </style>
 </head>
 <body>
 
 <header>
-  <img src="https://cdn-icons-png.flaticon.com/512/2966/2966483.png" alt="logo" style="width:44px;height:44px;border-radius:8px" />
-  <h1>Patient Monitor • Medical Dashboard</h1>
-
-  <div class="controls">
-    <div class="conn" title="Connection status">
-      <div id="connDot" class="dot" aria-hidden="true"></div>
-      <div id="connText" style="font-size:13px;color:var(--muted)">Disconnected</div>
-    </div>
-
-    <button id="themeToggle" class="toggle">🌙 Dark</button>
-    <button id="logoutBtn" class="btn" title="Sign out">Logout</button>
+  <img src="logo.jpeg" alt="" style="width:40px;height:40px;border-radius:6px;background:linear-gradient(135deg,#e6f0ff,#ffffff)">
+  <h1>Patient Monitoring — Medical Dashboard</h1>
+  <div style="flex:1"></div>
+  <div class="status">
+    <div class="dot" id="connDot" title="Connection status"></div>
+    <div class="stat"><span id="connText">Disconnected</span></div>
   </div>
 </header>
 
-<main class="layout" role="main">
-  <!-- LEFT: Live ECG + Past Records -->
-  <section>
+<div class="wrapper">
+  <div class="grid">
+    <!-- LEFT: LIVE ECG -->
     <div class="card">
-      <h3 style="margin:0 0 8px 0">Live ECG</h3>
-      <div style="font-size:13px;color:var(--muted)">Streaming ECG waveform (auto-scroll)</div>
+      <h3 style="margin:0 0 8px 0; color:#12355a">Live ECG</h3>
+      <div class="small">Real-time ECG waveform (auto-scrolling). Latest points appear as device uploads.</div>
       <canvas id="ecgCanvas"></canvas>
 
-      <div class="values" style="margin-top:12px">
-        <div class="valbox"><h4>Latest ECG</h4><p id="latestEcg">--</p></div>
-        <div class="valbox"><h4>Last Update</h4><p id="lastUpdate">--</p></div>
-        <div class="valbox"><h4>Patient</h4><p id="patientId">9UpZxq…</p></div>
+      <div class="values">
+        <div class="valbox">
+          <h4>Latest ECG</h4>
+          <p id="latestEcg">--</p>
+        </div>
+        <div class="valbox">
+          <h4>Last Update</h4>
+          <p id="lastUpdate">--</p>
+        </div>
       </div>
     </div>
 
-    <div class="card wide" style="margin-top:12px">
-      <h3 style="margin:0 0 8px 0">Past Records — Time Window Viewer</h3>
-      <div style="font-size:13px;color:var(--muted)">Choose a preset or custom range to plot ECG + temperatures</div>
+    <!-- RIGHT: Gauges -->
+    <div class="card">
+      <h3 style="margin:0 0 8px 0; color:#12355a">Temperatures</h3>
+      <div class="small">Object = body temperature (MLX object). Ambient = ambient sensor reading.</div>
+      <div class="gauges" style="margin-top:12px">
+        <div id="gBody" style="width:260px;height:180px;"></div>
+        <div id="gAmb" style="width:260px;height:180px;"></div>
+      </div>
 
-      <div class="controlsbar" style="margin-top:12px">
+      <div style="margin-top:12px">
+        <div style="display:flex; justify-content:space-between;">
+          <div class="small">Body Temp</div>
+          <div id="numBody" style="font-weight:700; color:var(--accent)">-- °C</div>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-top:6px;">
+          <div class="small">Ambient Temp</div>
+          <div id="numAmb" style="font-weight:700; color:var(--accent)">-- °C</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY: wide -->
+    <div class="card wide">
+      <h3 style="margin:0 0 8px 0; color:#12355a">Past Records — Time Window Viewer</h3>
+      <div class="small">Select a custom time window (or use presets) to plot ECG + temperatures together.</div>
+
+      <div class="controls" style="margin-top:12px">
         <label class="small">Start</label>
-        <input id="startDT" type="datetime-local" />
+        <input id="startDT" type="datetime-local"/>
         <label class="small">End</label>
-        <input id="endDT" type="datetime-local" />
+        <input id="endDT" type="datetime-local"/>
         <select id="preset">
           <option value="">Presets</option>
           <option value="5">Last 5 minutes</option>
           <option value="10">Last 10 minutes</option>
+          <option value="15">Last 15 minutes</option>
           <option value="30">Last 30 minutes</option>
-          <option value="60">Last 60 minutes</option>
         </select>
         <button id="loadBtn" class="btn">Load</button>
-        <button id="refreshBtn" class="btn" style="background:#2a9d8f;color:#fff">Refresh Live</button>
+        <button id="refreshBtn" class="btn" style="background:#2a9d8f">Refresh Live</button>
       </div>
 
-      <div id="loader" style="margin-top:10px;font-size:13px;color:var(--muted);display:none">Loading past records…</div>
-      <canvas id="historyCanvas" style="margin-top:12px"></canvas>
+      <canvas id="historyCanvas" style="margin-top:12px;"></canvas>
+      <div style="margin-top:8px" class="small">Note: If timestamps in the database are in format <code>YYYY-MM-DD_HH-MM-SS</code>, the dashboard will parse them. If your device writes a different format, tell me and I’ll adjust parsing.</div>
     </div>
-  </section>
+  </div>
 
-  <!-- RIGHT: Gauges & status -->
-  <aside>
-    <div class="card">
-      <h4 style="margin:0 0 8px 0">Temperatures</h4>
-      <div style="font-size:13px;color:var(--muted)">Body and ambient readings</div>
-
-      <div class="gauges">
-        <div id="gBody" style="width:260px;height:160px"></div>
-        <div id="gAmb" style="width:260px;height:160px"></div>
-      </div>
-
-      <div style="margin-top:10px; display:flex; justify-content:space-between; gap:8px">
-        <div style="text-align:left">
-          <div style="font-size:13px;color:var(--muted)">Body Temp</div>
-          <div id="numBody" style="font-weight:700;color:var(--accent)">-- °C</div>
-        </div>
-        <div style="text-align:left">
-          <div style="font-size:13px;color:var(--muted)">Ambient Temp</div>
-          <div id="numAmb" style="font-weight:700;color:var(--accent)">-- °C</div>
-        </div>
-      </div>
-
-      <div id="tempAlert" style="display:none;margin-top:10px;color:#ff3300;font-weight:700">⚠️ High Temperature Detected (&gt;38°C)</div>
-    </div>
-
-    <div class="card" style="margin-top:12px">
-      <h4 style="margin:0 0 8px 0">Device</h4>
-      <div style="font-size:13px;color:var(--muted)">Connection & details</div>
-      <div style="display:flex;justify-content:space-between;margin-top:12px">
-        <div>
-          <div style="font-size:12px;color:var(--muted)">Status</div>
-          <div id="devStatus" style="font-weight:700">—</div>
-        </div>
-        <div>
-          <div style="font-size:12px;color:var(--muted)">Last Ping</div>
-          <div id="lastPing">—</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card" style="margin-top:12px">
-      <h4 style="margin:0 0 8px 0">Quick Actions</h4>
-      <div style="display:flex;gap:8px;margin-top:8px">
-        <button id="downloadCsv" class="btn">Download CSV</button>
-        <button id="clearCharts" class="btn">Clear Charts</button>
-      </div>
-    </div>
-  </aside>
-</main>
-
-<footer>⚙️ Local demo • Built with Firebase Realtime Database + Chart.js • UI-only changes</footer>
+  <footer>Local demo • Open with Live Server / local HTTP server • Designed for medical-style monitoring</footer>
+</div>
 
 <script>
-  // --------------------------------------------
-  // Firebase (compat) - keep config & DB unchanged
-  // --------------------------------------------
-  const firebaseConfig = {
-    apiKey: "AIzaSyBwGtPqCsq9G74bem7C6qWuJNDoqTH6sts",
-    authDomain: "iot-health-monitor-f0530.firebaseapp.com",
-    databaseURL: "https://iot-health-monitor-f0530-default-rtdb.firebaseio.com",
-    projectId: "iot-health-monitor-f0530",
-    storageBucket: "iot-health-monitor-f0530.firebasestorage.app",
-    messagingSenderId: "1036078967425",
-    appId: "1:1036078967425:web:d01ccc6f982943c2aebb80"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.database();
-  const auth = firebase.auth();
+/* =========================
+   Replace these with your Firebase config (project-specific)
+   ========================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyBwGtPqCsq9G74bem7C6qWuJNDoqTH6sts",
+  authDomain: "iot-health-monitor-f0530.firebaseapp.com",
+  databaseURL: "https://iot-health-monitor-f0530-default-rtdb.firebaseio.com",
+  projectId: "iot-health-monitor-f0530",
+  storageBucket: "iot-health-monitor-f0530.firebasestorage.app",
+  messagingSenderId: "1036078967425",
+  appId: "1:1036078967425:web:d01ccc6f982943c2aebb80"
+};
 
-  // DOM
-  const connDot = document.getElementById('connDot');
-  const connText = document.getElementById('connText');
-  const latestEcgEl = document.getElementById('latestEcg');
-  const lastUpdateEl = document.getElementById('lastUpdate');
-  const gBodyEl = document.getElementById('gBody');
-  const gAmbEl = document.getElementById('gAmb');
-  const numBody = document.getElementById('numBody');
-  const numAmb = document.getElementById('numAmb');
-  const tempAlert = document.getElementById('tempAlert');
-  const devStatus = document.getElementById('devStatus');
-  const lastPing = document.getElementById('lastPing');
+/* Initialize Firebase */
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-  // AUTH: ensure only signed-in users can stay here (frontend-only)
-  auth.onAuthStateChanged(user => {
-    if(!user){ location.href = 'index.html' } // if not signed in, redirect to login
-  });
+/* UI elements */
+const connDot = document.getElementById('connDot');
+const connText = document.getElementById('connText');
+const latestEcgEl = document.getElementById('latestEcg');
+const lastUpdEl = document.getElementById('lastUpdate');
+const numBody = document.getElementById('numBody');
+const numAmb = document.getElementById('numAmb');
 
-  document.getElementById('logoutBtn').addEventListener('click', () => {
-    auth.signOut().then(()=> { location.href='index.html' }).catch(e=>{ alert(e.message) });
-  });
+/* ======= JustGage gauges ======= */
+const gBody = new JustGage({
+  id: 'gBody',
+  value: 0, min: 20, max: 45,
+  title: 'Body Temp (°C)',
+  label: '',
+  levelColors: ['#00cc66','#ffcc00','#ff3300'],
+  relativeGaugeSize: true
+});
+const gAmb = new JustGage({
+  id: 'gAmb',
+  value: 0, min: 0, max: 50,
+  title: 'Ambient (°C)',
+  label: '',
+  levelColors: ['#00cc66','#ffcc00','#ff3300'],
+  relativeGaugeSize: true
+});
 
-  // THEME toggle
-  const themeToggle = document.getElementById('themeToggle');
-  themeToggle.addEventListener('click', () => {
-    document.body.classList.toggle('dark');
-    const dark = document.body.classList.contains('dark');
-    themeToggle.innerText = dark ? '☀️ Light' : '🌙 Dark';
-  });
+/* ======= Live ECG Chart (Chart.js) ======= */
+const ecgCtx = document.getElementById('ecgCanvas').getContext('2d');
+const ecgChart = new Chart(ecgCtx, {
+  type: 'line',
+  data: { labels: [], datasets: [{ label:'ECG', data: [], borderColor:'#d33', tension:0.15, pointRadius:0, borderWidth:1.5 }] },
+  options: { animation:false, responsive:true, scales:{ x:{display:false}, y:{min:0,max:1024} }, plugins:{legend:{display:false}} }
+});
 
-  // -----------------------
-  // Gauges (JustGage)
-  // -----------------------
-  const gBody = new JustGage({ id:'gBody', value:0, min:20, max:45, title:'Body °C', relativeGaugeSize:true });
-  const gAmb = new JustGage({ id:'gAmb', value:0, min:0, max:50, title:'Ambient °C', relativeGaugeSize:true });
+/* ======= History Chart placeholder ======= */
+const historyCtx = document.getElementById('historyCanvas').getContext('2d');
+let historyChart = new Chart(historyCtx, {
+  type:'line',
+  data:{ labels:[], datasets:[
+    { label:'ECG', data:[], borderColor:'#d33', tension:0.2, pointRadius:0, yAxisID:'y' },
+    { label:'Body Temp', data:[], borderColor:'#0078d7', tension:0.2, pointRadius:2, yAxisID:'y1' },
+    { label:'Ambient Temp', data:[], borderColor:'#00a884', tension:0.2, pointRadius:2, yAxisID:'y1' }
+  ]},
+  options:{ responsive:true, interaction:{mode:'index'}, stacked:false,
+    scales:{ y:{ type:'linear', position:'left', min:0, max:110 }, y1:{ type:'linear', position:'right', min:0, max:50, grid:{drawOnChartArea:false} } }
+  }
+});
 
-  // -----------------------
-  // Charts: ECG live + History
-  // -----------------------
-  const ecgCtx = document.getElementById('ecgCanvas').getContext('2d');
-  const ecgChart = new Chart(ecgCtx, {
-    type: 'line',
-    data: { labels: [], datasets: [{ label: 'ECG', data: [], borderColor:'#d33', tension:0.25, pointRadius:0, borderWidth:1.8 }] },
-    options: {
-      animation:false, responsive:true, maintainAspectRatio:false,
-      scales:{ x:{ display:false }, y:{ min:0, max:110 } },
-      plugins:{ legend:{ display:false } }
-    }
-  });
+/* ======= Helpers ======= */
 
-  const historyCtx = document.getElementById('historyCanvas').getContext('2d');
-  const historyChart = new Chart(historyCtx, {
-    type:'line',
-    data: { labels:[], datasets:[
-      { label:'ECG', data:[], borderColor:'#d33', tension:0.2, pointRadius:0, yAxisID:'y' },
-      { label:'Body Temp', data:[], borderColor:'#0078d7', tension:0.3, pointRadius:2, yAxisID:'y1' },
-      { label:'Ambient Temp', data:[], borderColor:'#00a884', tension:0.3, pointRadius:2, yAxisID:'y1' }
-    ]},
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      interaction:{ mode:'index', intersect:false },
-      scales:{
-        y:{ type:'linear', position:'left', min:0, max:110 },
-        y1:{ type:'linear', position:'right', min:0, max:50, grid:{ drawOnChartArea:false } }
-      }
-    }
-  });
+/**
+ * Parse timestamp keys like "2025-11-01_14-47-21" into JS Date
+ * If parsing fails, return null
+ */
+function parseTimestampKey(key) {
+  if (!key) return null;
+  // Expect format YYYY-MM-DD_HH-MM-SS or YYYY-MM-DD_HH-MM-SS_millis (some variants)
+  try {
+    const parts = key.split('_');
+    if (parts.length < 2) return null;
+    const datePart = parts[0];            // YYYY-MM-DD
+    const timePart = parts[1];            // HH-MM-SS or HH-MM-SS.mmm
+    const dateParts = datePart.split('-').map(Number);
+    // transform time separators - allow '.' or '-'
+    const timeStr = timePart.replace(/\./g, '-');
+    const tparts = timeStr.split('-').map(Number);
+    const y = dateParts[0], m = dateParts[1]-1, d = dateParts[2];
+    const hh = tparts[0]||0, mm = tparts[1]||0, ss = tparts[2]||0;
+    return new Date(y, m, d, hh, mm, ss);
+  } catch(e) {
+    return null;
+  }
+}
 
-  // ----------------------------------------
-  // Live Firebase listener (keeps DB unchanged)
-  // ----------------------------------------
-  const ref = db.ref('Users/9UpZxqdLiRgfIleOidhF0qWUV0R2/UpdatedReadings');
+/* Turn DB value into normalized reading object */
+function normalizeEntry(key, val) {
+  // val may be {ECG:..., Temperature:{ObjectTemp:.., AmbientTemp:..}} or {ObjectTemp:..., AmbientTemp:..., ECG:...}
+  let objectTemp = null, ambientTemp = null, ecg = null;
+  if (!val) return null;
+  if (val.Temperature) {
+    if (val.Temperature.ObjectTemp !== undefined) objectTemp = Number(val.Temperature.ObjectTemp);
+    if (val.Temperature.AmbientTemp !== undefined) ambientTemp = Number(val.Temperature.AmbientTemp);
+  }
+  if (val.ObjectTemp !== undefined) objectTemp = Number(val.ObjectTemp);
+  if (val.AmbientTemp !== undefined) ambientTemp = Number(val.AmbientTemp);
+  if (val.ECG !== undefined) ecg = Number(val.ECG);
+  return { key, timestamp: parseTimestampKey(key), ecg, objectTemp, ambientTemp };
+}
 
-  // Connection indicator
-  db.ref('.info/connected').on('value', s => {
-    const ok = !!s.val();
-    connDot.classList.toggle('connected', ok);
-    connText.innerText = ok ? 'Connected' : 'Disconnected';
-  });
+/* Update connection status */
+function setConnected(ok) {
+  connDot.style.background = ok ? '#14a44d' : '#f3f3f3';
+  connText.innerText = ok ? 'Connected' : 'Disconnected';
+}
 
-  // Listen to latest value (live)
-  ref.limitToLast(1).on('value', snap => {
-    if(!snap.exists()) return;
-    const data = snap.val();
-    const key = Object.keys(data).pop();
-    const v = data[key];
-    const t = new Date();
+/* Format date for UI */
+function fmtDate(d){
+  if(!d) return '--';
+  return d.toLocaleString();
+}
 
-    // Update UI values
-    lastUpdateEl.innerText = t.toLocaleTimeString();
-    latestEcgEl.innerText = v.ECG ?? '--';
+/* ========== Firebase Listeners ========== */
+const rootRef = db.ref('Users/9UpZxqdLiRgfIleOidhF0qWUV0R2/UpdatedReadings');
 
-    // Temperatures
-    if(v.ObjectTemp != null){
-      const body = v.ObjectTemp;
-      gBody.refresh(body);
-      numBody.innerText = body + ' °C';
-      if(body > 38){ numBody.style.color = '#ff3300'; tempAlert.style.display = 'block'; } else { numBody.style.color = ''; tempAlert.style.display = 'none'; }
-    }
-    if(v.AmbientTemp != null){
-      gAmb.refresh(v.AmbientTemp);
-      numAmb.innerText = v.AmbientTemp + ' °C';
-    }
+/* Track last seen keys to avoid duplicates on child_added streaming */
+let seenKeys = new Set();
 
-    // Device status / last ping (UI only)
-    devStatus.innerText = v.DeviceStatus || 'Online';
-    lastPing.innerText = t.toLocaleTimeString();
+/* Live streaming — when a new child is added or changed, update live chart & gauges */
+rootRef.limitToLast(1).on('value', snap => {
+  setConnected(true);
+  if (!snap.exists()) return;
+  const val = snap.val();
+  // snap.val() can contain a single key mapping to object
+  // find the (only) child
+  const keys = Object.keys(val);
+  if (keys.length === 0) return;
+  const key = keys[keys.length-1];
+  const entryRaw = val[key];
+  const entry = normalizeEntry(key, entryRaw);
+  if (!entry) return;
 
-    // Add to live ECG chart (auto-scroll)
-    if(v.ECG != null){
-      const label = t.toLocaleTimeString();
-      ecgChart.data.labels.push(label);
-      ecgChart.data.datasets[0].data.push(v.ECG);
-      if(ecgChart.data.labels.length > 500){ ecgChart.data.labels.shift(); ecgChart.data.datasets[0].data.shift(); }
-      ecgChart.update('none');
-    }
-  });
+  // Update last update time
+  lastUpdEl.innerText = fmtDate(entry.timestamp) || key;
 
-  // ----------------------------------------
-  // Load history function (read-only)
-  // ----------------------------------------
-  const loader = document.getElementById('loader');
-  async function loadRange(start, end){
-    loader.style.display = 'block';
-    // Get all records (client-side filter) — same as original approach
-    const snap = await ref.get();
-    loader.style.display = 'none';
-    if(!snap.exists()){ alert('No data found in range'); return; }
-    const data = snap.val();
-    const labels = [], ecg = [], body = [], amb = [];
-
-    for(const [k,v] of Object.entries(data)){
-      // timestamp parsing: keep original tolerant parsing
-      const d = new Date(k.replace(/_/g,' ').replace(/-/g,':'));
-      if(d >= start && d <= end){
-        labels.push(d.toLocaleTimeString());
-        ecg.push(v.ECG ?? null);
-        body.push(v.ObjectTemp ?? null);
-        amb.push(v.AmbientTemp ?? null);
-      }
-    }
-    historyChart.data.labels = labels;
-    historyChart.data.datasets[0].data = ecg;
-    historyChart.data.datasets[1].data = body;
-    historyChart.data.datasets[2].data = amb;
-    historyChart.update();
+  // Update gauges if temps exist
+  if (entry.objectTemp !== null && !isNaN(entry.objectTemp)) {
+    gBody.refresh(entry.objectTemp);
+    numBody.innerText = entry.objectTemp.toFixed(2) + ' °C';
+  }
+  if (entry.ambientTemp !== null && !isNaN(entry.ambientTemp)) {
+    gAmb.refresh(entry.ambientTemp);
+    numAmb.innerText = entry.ambientTemp.toFixed(2) + ' °C';
   }
 
-  // Presets wiring
-  document.getElementById('preset').addEventListener('change', e => {
-    const mins = +e.target.value; if(!mins) return;
-    const now = new Date(), start = new Date(now.getTime() - mins*60000);
-    const fmt = d => d.toISOString().slice(0,16);
-    document.getElementById('startDT').value = fmt(start);
-    document.getElementById('endDT').value = fmt(now);
-  });
-
-  document.getElementById('loadBtn').addEventListener('click', () => {
-    const s = new Date(document.getElementById('startDT').value);
-    const e = new Date(document.getElementById('endDT').value);
-    if(isNaN(s) || isNaN(e) || s >= e){ alert('Invalid range'); return; }
-    loadRange(s,e);
-  });
-
-  document.getElementById('refreshBtn').addEventListener('click', () => {
-    ecgChart.data.labels = []; ecgChart.data.datasets[0].data = []; ecgChart.update();
-    historyChart.data.labels = []; historyChart.data.datasets.forEach(ds=>ds.data=[]); historyChart.update();
-  });
-
-  // -----------------------
-  // Quick actions
-  // -----------------------
-  document.getElementById('clearCharts').addEventListener('click', () => {
-    ecgChart.data.labels = []; ecgChart.data.datasets[0].data = []; ecgChart.update();
-    historyChart.data.labels = []; historyChart.data.datasets.forEach(ds=>ds.data=[]); historyChart.update();
-  });
-
-  // CSV download of currently loaded history chart
-  document.getElementById('downloadCsv').addEventListener('click', () => {
-    const labels = historyChart.data.labels || [];
-    const rows = [['time','ecg','bodyTemp','ambientTemp']];
-    const ecgData = historyChart.data.datasets[0].data || [];
-    const bodyData = historyChart.data.datasets[1].data || [];
-    const ambData = historyChart.data.datasets[2].data || [];
-    for(let i=0;i<labels.length;i++){
-      rows.push([labels[i]||'', ecgData[i] ?? '', bodyData[i] ?? '', ambData[i] ?? '']);
+  // If ECG present, push to live ECG chart
+  if (entry.ecg !== null && !isNaN(entry.ecg)) {
+    latestEcgEl.innerText = String(entry.ecg);
+    // label uses time component
+    const label = entry.timestamp ? entry.timestamp.toLocaleTimeString() : key;
+    ecgChart.data.labels.push(label);
+    ecgChart.data.datasets[0].data.push(entry.ecg);
+    // keep last 300 points
+    if (ecgChart.data.labels.length > 300) {
+      ecgChart.data.labels.shift();
+      ecgChart.data.datasets[0].data.shift();
     }
-    const csv = rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
-    const blob = new Blob([csv], { type:'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = 'iot_history.csv'; a.click(); URL.revokeObjectURL(url);
-  });
+    ecgChart.update('none');
+  }
+}, (err) => {
+  console.error('firebase live error', err);
+  setConnected(false);
+});
 
-  // Small UX: format current time into inputs when page loads (helpful)
-  (function presetNow(){
-    const now = new Date();
-    const fmt = d => d.toISOString().slice(0,16);
-    document.getElementById('endDT').value = fmt(now);
-    document.getElementById('startDT').value = fmt(new Date(now.getTime() - 5*60000));
-  })();
+/* If connection disconnects, show indicator */
+db.ref('.info/connected').on('value', snap => {
+  const v = snap.val();
+  setConnected(!!v);
+});
+
+/* ========== Past Data Loader ========== */
+
+/**
+ * Load entries between two Date objects (inclusive) and draw chart with ECG + temps
+ */
+async function loadRange(startDate, endDate) {
+  // Fetch snapshot once (could optimize with queries by key, but RTDB doesn't support range on arbitrary key strings)
+  const snapshot = await rootRef.get();
+  if (!snapshot.exists()) {
+    alert('No data in UpdatedReadings');
+    return;
+  }
+  const data = snapshot.val();
+  const labels = [];
+  const ecgArr = [];
+  const bodyArr = [];
+  const ambArr = [];
+
+  // iterate keys in chronological order
+  const keys = Object.keys(data).sort();
+
+  for (const k of keys) {
+    const parsed = parseTimestampKey(k);
+    // If parse fails, we skip (or you can include by index)
+    if (!parsed) continue;
+    if (parsed >= startDate && parsed <= endDate) {
+      const rec = normalizeEntry(k, data[k]);
+      const label = parsed.toLocaleTimeString();
+      labels.push(label);
+      ecgArr.push(rec.ecg !== null ? rec.ecg : null);
+      bodyArr.push(rec.objectTemp !== null ? rec.objectTemp : null);
+      ambArr.push(rec.ambientTemp !== null ? rec.ambientTemp : null);
+    }
+  }
+
+  if (labels.length === 0) {
+    alert('No entries found in the selected window.');
+    return;
+  }
+
+  // Draw history chart
+  historyChart.data.labels = labels;
+  historyChart.data.datasets[0].data = ecgArr;
+  historyChart.data.datasets[1].data = bodyArr;
+  historyChart.data.datasets[2].data = ambArr;
+  historyChart.update();
+}
+
+/* Hook UI: preset selector to fill start/end */
+document.getElementById('preset').addEventListener('change', (e) => {
+  const val = e.target.value;
+  if (!val) return;
+  const mins = Number(val);
+  const now = new Date();
+  const start = new Date(now.getTime() - mins * 60 * 1000);
+  // Fill inputs in local datetime format
+  const toLocalInput = d => d.toISOString().slice(0,16);
+  document.getElementById('startDT').value = toLocalInput(start);
+  document.getElementById('endDT').value = toLocalInput(now);
+});
+
+/* Load button */
+document.getElementById('loadBtn').addEventListener('click', () => {
+  const s = document.getElementById('startDT').value;
+  const e = document.getElementById('endDT').value;
+  if (!s || !e) { alert('Select start and end times (or use a preset)'); return; }
+  const start = new Date(s);
+  const end = new Date(e);
+  if (isNaN(start) || isNaN(end) || start >= end) { alert('Invalid time range'); return; }
+  loadRange(start, end);
+});
+
+/* Refresh live — clear charts */
+document.getElementById('refreshBtn').addEventListener('click', () => {
+  ecgChart.data.labels = [];
+  ecgChart.data.datasets[0].data = [];
+  ecgChart.update();
+  historyChart.data.labels = [];
+  historyChart.data.datasets.forEach(ds => ds.data = []);
+  historyChart.update();
+});
+
+/* On load: set presets to last 5 minutes and attempt to prefill start/end */
+window.addEventListener('load', () => {
+  const now = new Date();
+  const start = new Date(now.getTime() - 5*60*1000);
+  const toLocalInput = d => d.toISOString().slice(0,16);
+  document.getElementById('startDT').value = toLocalInput(start);
+  document.getElementById('endDT').value = toLocalInput(now);
+});
 </script>
-
 </body>
 </html>
