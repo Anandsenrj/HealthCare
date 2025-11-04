@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Medical IoT — Health Dashboard</title>
+
+<!-- Firebase compat (database) -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
+
+<!-- JustGage + Raphael for gauges -->
+<script src="https://cdn.jsdelivr.net/npm/raphael@2.3.0/raphael.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/justgage@1.4.0/justgage.min.js"></script>
+
+<style>
+  :root{
+    --accent: #0078d7;
+    --muted:#6b7280;
+    --bg:#f4f7fb;
+    --card:#ffffff;
+  }
+  body{font-family: "Segoe UI", Roboto, Arial; margin:0; background:var(--bg); color:#111}
+  header{background:var(--card); border-bottom:1px solid #e6eefb; padding:18px 24px; display:flex; align-items:center; gap:20px;}
+  header h1{margin:0; font-size:20px; color:var(--accent)}
+  .wrapper{padding:18px;}
+  .grid{display:grid; grid-template-columns: 1fr 360px; gap:18px; align-items:start;}
+  .card{background:var(--card); border-radius:12px; padding:16px; box-shadow:0 6px 18px rgba(18,52,86,0.06);}
+  .wide{grid-column:1/-1}
+  .status{display:flex; gap:12px; align-items:center}
+  .status .dot{width:12px;height:12px;border-radius:50%; background:#f3f3f3; border:1px solid #ccc}
+  .stat{display:flex; gap:8px; align-items:center; font-size:14px; color:var(--muted)}
+  .gauges{display:flex; flex-direction:column; gap:12px; align-items:center}
+  #ecgCanvas{height:300px !important; width:100%;}
+  #historyCanvas{height:300px !important; width:100%;}
+  .controls{display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; align-items:center; justify-content:center}
+  .controls input[type="datetime-local"]{padding:8px;border-radius:6px;border:1px solid #ddd}
+  .controls select{padding:8px;border-radius:6px;border:1px solid #ddd}
+  .btn{background:var(--accent); color:white; padding:8px 12px; border-radius:8px; border:none; cursor:pointer}
+  .small{font-size:13px; color:var(--muted)}
+  footer{margin-top:18px;text-align:center;color:var(--muted); font-size:13px}
+  .values{display:flex; gap:12px; justify-content:space-between; margin-top:8px}
+  .valbox{flex:1; background:#fafbff; padding:10px; border-radius:8px; text-align:center}
+  .valbox h4{margin:0; font-size:13px; color:var(--muted)}
+  .valbox p{margin:6px 0 0; font-size:18px; color:var(--accent); font-weight:600}
+</style>
+</head>
+<body>
+
+<header>
+  <img src="logo.jpeg" alt="" style="width:40px;height:40px;border-radius:6px;background:linear-gradient(135deg,#e6f0ff,#ffffff)">
+  <h1>Patient Monitoring — Medical Dashboard</h1>
+  <div style="flex:1"></div>
+  <div class="status">
+    <div class="dot" id="connDot" title="Connection status"></div>
+    <div class="stat"><span id="connText">Disconnected</span></div>
+  </div>
+</header>
+
+<div class="wrapper">
+  <div class="grid">
+    <!-- LEFT: LIVE ECG -->
+    <div class="card">
+      <h3 style="margin:0 0 8px 0; color:#12355a">Live ECG</h3>
+      <div class="small">Real-time ECG waveform (auto-scrolling). Latest points appear as device uploads.</div>
+      <canvas id="ecgCanvas"></canvas>
+
+      <div class="values">
+        <div class="valbox">
+          <h4>Latest ECG</h4>
+          <p id="latestEcg">--</p>
+        </div>
+        <div class="valbox">
+          <h4>Last Update</h4>
+          <p id="lastUpdate">--</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Gauges -->
+    <div class="card">
+      <h3 style="margin:0 0 8px 0; color:#12355a">Temperatures</h3>
+      <div class="small">Object = body temperature (MLX object). Ambient = ambient sensor reading.</div>
+      <div class="gauges" style="margin-top:12px">
+        <div id="gBody" style="width:260px;height:180px;"></div>
+        <div id="gAmb" style="width:260px;height:180px;"></div>
+      </div>
+
+      <div style="margin-top:12px">
+        <div style="display:flex; justify-content:space-between;">
+          <div class="small">Body Temp</div>
+          <div id="numBody" style="font-weight:700; color:var(--accent)">-- °C</div>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-top:6px;">
+          <div class="small">Ambient Temp</div>
+          <div id="numAmb" style="font-weight:700; color:var(--accent)">-- °C</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY: wide -->
+    <div class="card wide">
+      <h3 style="margin:0 0 8px 0; color:#12355a">Past Records — Time Window Viewer</h3>
+      <div class="small">Select a custom time window (or use presets) to plot ECG + temperatures together.</div>
+
+      <div class="controls" style="margin-top:12px">
+        <label class="small">Start</label>
+        <input id="startDT" type="datetime-local"/>
+        <label class="small">End</label>
+        <input id="endDT" type="datetime-local"/>
+        <select id="preset">
+          <option value="">Presets</option>
+          <option value="5">Last 5 minutes</option>
+          <option value="10">Last 10 minutes</option>
+          <option value="15">Last 15 minutes</option>
+          <option value="30">Last 30 minutes</option>
+        </select>
+        <button id="loadBtn" class="btn">Load</button>
+        <button id="refreshBtn" class="btn" style="background:#2a9d8f">Refresh Live</button>
+      </div>
+
+      <canvas id="historyCanvas" style="margin-top:12px;"></canvas>
+      <div style="margin-top:8px" class="small">Note: If timestamps in the database are in format <code>YYYY-MM-DD_HH-MM-SS</code>, the dashboard will parse them. If your device writes a different format, tell me and I’ll adjust parsing.</div>
+    </div>
+  </div>
+
+  <footer>Local demo • Open with Live Server / local HTTP server • Designed for medical-style monitoring</footer>
+</div>
+
+<script>
+/* =========================
+   Replace these with your Firebase config (project-specific)
+   ========================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyBwGtPqCsq9G74bem7C6qWuJNDoqTH6sts",
+  authDomain: "iot-health-monitor-f0530.firebaseapp.com",
+  databaseURL: "https://iot-health-monitor-f0530-default-rtdb.firebaseio.com",
+  projectId: "iot-health-monitor-f0530",
+  storageBucket: "iot-health-monitor-f0530.firebasestorage.app",
+  messagingSenderId: "1036078967425",
+  appId: "1:1036078967425:web:d01ccc6f982943c2aebb80"
+};
+
+/* Initialize Firebase */
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+/* UI elements */
+const connDot = document.getElementById('connDot');
+const connText = document.getElementById('connText');
+const latestEcgEl = document.getElementById('latestEcg');
+const lastUpdEl = document.getElementById('lastUpdate');
+const numBody = document.getElementById('numBody');
+const numAmb = document.getElementById('numAmb');
+
+/* ======= JustGage gauges ======= */
+const gBody = new JustGage({
+  id: 'gBody',
+  value: 0, min: 20, max: 45,
+  title: 'Body Temp (°C)',
+  label: '',
+  levelColors: ['#00cc66','#ffcc00','#ff3300'],
+  relativeGaugeSize: true
+});
+const gAmb = new JustGage({
+  id: 'gAmb',
+  value: 0, min: 0, max: 50,
+  title: 'Ambient (°C)',
+  label: '',
+  levelColors: ['#00cc66','#ffcc00','#ff3300'],
+  relativeGaugeSize: true
+});
+
+/* ======= Live ECG Chart (Chart.js) ======= */
+const ecgCtx = document.getElementById('ecgCanvas').getContext('2d');
+const ecgChart = new Chart(ecgCtx, {
+  type: 'line',
+  data: { labels: [], datasets: [{ label:'ECG', data: [], borderColor:'#d33', tension:0.15, pointRadius:0, borderWidth:1.5 }] },
+  options: { animation:false, responsive:true, scales:{ x:{display:false}, y:{min:0,max:1024} }, plugins:{legend:{display:false}} }
+});
+
+/* ======= History Chart placeholder ======= */
+const historyCtx = document.getElementById('historyCanvas').getContext('2d');
+let historyChart = new Chart(historyCtx, {
+  type:'line',
+  data:{ labels:[], datasets:[
+    { label:'ECG', data:[], borderColor:'#d33', tension:0.2, pointRadius:0, yAxisID:'y' },
+    { label:'Body Temp', data:[], borderColor:'#0078d7', tension:0.2, pointRadius:2, yAxisID:'y1' },
+    { label:'Ambient Temp', data:[], borderColor:'#00a884', tension:0.2, pointRadius:2, yAxisID:'y1' }
+  ]},
+  options:{ responsive:true, interaction:{mode:'index'}, stacked:false,
+    scales:{ y:{ type:'linear', position:'left', min:0, max:110 }, y1:{ type:'linear', position:'right', min:0, max:50, grid:{drawOnChartArea:false} } }
+  }
+});
+
+/* ======= Helpers ======= */
+
+/**
+ * Parse timestamp keys like "2025-11-01_14-47-21" into JS Date
+ * If parsing fails, return null
+ */
+function parseTimestampKey(key) {
+  if (!key) return null;
+  // Expect format YYYY-MM-DD_HH-MM-SS or YYYY-MM-DD_HH-MM-SS_millis (some variants)
+  try {
+    const parts = key.split('_');
+    if (parts.length < 2) return null;
+    const datePart = parts[0];            // YYYY-MM-DD
+    const timePart = parts[1];            // HH-MM-SS or HH-MM-SS.mmm
+    const dateParts = datePart.split('-').map(Number);
+    // transform time separators - allow '.' or '-'
+    const timeStr = timePart.replace(/\./g, '-');
+    const tparts = timeStr.split('-').map(Number);
+    const y = dateParts[0], m = dateParts[1]-1, d = dateParts[2];
+    const hh = tparts[0]||0, mm = tparts[1]||0, ss = tparts[2]||0;
+    return new Date(y, m, d, hh, mm, ss);
+  } catch(e) {
+    return null;
+  }
+}
+
+/* Turn DB value into normalized reading object */
+function normalizeEntry(key, val) {
+  // val may be {ECG:..., Temperature:{ObjectTemp:.., AmbientTemp:..}} or {ObjectTemp:..., AmbientTemp:..., ECG:...}
+  let objectTemp = null, ambientTemp = null, ecg = null;
+  if (!val) return null;
+  if (val.Temperature) {
+    if (val.Temperature.ObjectTemp !== undefined) objectTemp = Number(val.Temperature.ObjectTemp);
+    if (val.Temperature.AmbientTemp !== undefined) ambientTemp = Number(val.Temperature.AmbientTemp);
+  }
+  if (val.ObjectTemp !== undefined) objectTemp = Number(val.ObjectTemp);
+  if (val.AmbientTemp !== undefined) ambientTemp = Number(val.AmbientTemp);
+  if (val.ECG !== undefined) ecg = Number(val.ECG);
+  return { key, timestamp: parseTimestampKey(key), ecg, objectTemp, ambientTemp };
+}
+
+/* Update connection status */
+function setConnected(ok) {
+  connDot.style.background = ok ? '#14a44d' : '#f3f3f3';
+  connText.innerText = ok ? 'Connected' : 'Disconnected';
+}
+
+/* Format date for UI */
+function fmtDate(d){
+  if(!d) return '--';
+  return d.toLocaleString();
+}
+
+/* ========== Firebase Listeners ========== */
+const rootRef = db.ref('Users/9UpZxqdLiRgfIleOidhF0qWUV0R2/UpdatedReadings');
+
+/* Track last seen keys to avoid duplicates on child_added streaming */
+let seenKeys = new Set();
+
+/* Live streaming — when a new child is added or changed, update live chart & gauges */
+rootRef.limitToLast(1).on('value', snap => {
+  setConnected(true);
+  if (!snap.exists()) return;
+  const val = snap.val();
+  // snap.val() can contain a single key mapping to object
+  // find the (only) child
+  const keys = Object.keys(val);
+  if (keys.length === 0) return;
+  const key = keys[keys.length-1];
+  const entryRaw = val[key];
+  const entry = normalizeEntry(key, entryRaw);
+  if (!entry) return;
+
+  // Update last update time
+  lastUpdEl.innerText = fmtDate(entry.timestamp) || key;
+
+  // Update gauges if temps exist
+  if (entry.objectTemp !== null && !isNaN(entry.objectTemp)) {
+    gBody.refresh(entry.objectTemp);
+    numBody.innerText = entry.objectTemp.toFixed(2) + ' °C';
+  }
+  if (entry.ambientTemp !== null && !isNaN(entry.ambientTemp)) {
+    gAmb.refresh(entry.ambientTemp);
+    numAmb.innerText = entry.ambientTemp.toFixed(2) + ' °C';
+  }
+
+  // If ECG present, push to live ECG chart
+  if (entry.ecg !== null && !isNaN(entry.ecg)) {
+    latestEcgEl.innerText = String(entry.ecg);
+    // label uses time component
+    const label = entry.timestamp ? entry.timestamp.toLocaleTimeString() : key;
+    ecgChart.data.labels.push(label);
+    ecgChart.data.datasets[0].data.push(entry.ecg);
+    // keep last 300 points
+    if (ecgChart.data.labels.length > 300) {
+      ecgChart.data.labels.shift();
+      ecgChart.data.datasets[0].data.shift();
+    }
+    ecgChart.update('none');
+  }
+}, (err) => {
+  console.error('firebase live error', err);
+  setConnected(false);
+});
+
+/* If connection disconnects, show indicator */
+db.ref('.info/connected').on('value', snap => {
+  const v = snap.val();
+  setConnected(!!v);
+});
+
+/* ========== Past Data Loader ========== */
+
+/**
+ * Load entries between two Date objects (inclusive) and draw chart with ECG + temps
+ */
+async function loadRange(startDate, endDate) {
+  // Fetch snapshot once (could optimize with queries by key, but RTDB doesn't support range on arbitrary key strings)
+  const snapshot = await rootRef.get();
+  if (!snapshot.exists()) {
+    alert('No data in UpdatedReadings');
+    return;
+  }
+  const data = snapshot.val();
+  const labels = [];
+  const ecgArr = [];
+  const bodyArr = [];
+  const ambArr = [];
+
+  // iterate keys in chronological order
+  const keys = Object.keys(data).sort();
+
+  for (const k of keys) {
+    const parsed = parseTimestampKey(k);
+    // If parse fails, we skip (or you can include by index)
+    if (!parsed) continue;
+    if (parsed >= startDate && parsed <= endDate) {
+      const rec = normalizeEntry(k, data[k]);
+      const label = parsed.toLocaleTimeString();
+      labels.push(label);
+      ecgArr.push(rec.ecg !== null ? rec.ecg : null);
+      bodyArr.push(rec.objectTemp !== null ? rec.objectTemp : null);
+      ambArr.push(rec.ambientTemp !== null ? rec.ambientTemp : null);
+    }
+  }
+
+  if (labels.length === 0) {
+    alert('No entries found in the selected window.');
+    return;
+  }
+
+  // Draw history chart
+  historyChart.data.labels = labels;
+  historyChart.data.datasets[0].data = ecgArr;
+  historyChart.data.datasets[1].data = bodyArr;
+  historyChart.data.datasets[2].data = ambArr;
+  historyChart.update();
+}
+
+/* Hook UI: preset selector to fill start/end */
+document.getElementById('preset').addEventListener('change', (e) => {
+  const val = e.target.value;
+  if (!val) return;
+  const mins = Number(val);
+  const now = new Date();
+  const start = new Date(now.getTime() - mins * 60 * 1000);
+  // Fill inputs in local datetime format
+  const toLocalInput = d => d.toISOString().slice(0,16);
+  document.getElementById('startDT').value = toLocalInput(start);
+  document.getElementById('endDT').value = toLocalInput(now);
+});
+
+/* Load button */
+document.getElementById('loadBtn').addEventListener('click', () => {
+  const s = document.getElementById('startDT').value;
+  const e = document.getElementById('endDT').value;
+  if (!s || !e) { alert('Select start and end times (or use a preset)'); return; }
+  const start = new Date(s);
+  const end = new Date(e);
+  if (isNaN(start) || isNaN(end) || start >= end) { alert('Invalid time range'); return; }
+  loadRange(start, end);
+});
+
+/* Refresh live — clear charts */
+document.getElementById('refreshBtn').addEventListener('click', () => {
+  ecgChart.data.labels = [];
+  ecgChart.data.datasets[0].data = [];
+  ecgChart.update();
+  historyChart.data.labels = [];
+  historyChart.data.datasets.forEach(ds => ds.data = []);
+  historyChart.update();
+});
+
+/* On load: set presets to last 5 minutes and attempt to prefill start/end */
+window.addEventListener('load', () => {
+  const now = new Date();
+  const start = new Date(now.getTime() - 5*60*1000);
+  const toLocalInput = d => d.toISOString().slice(0,16);
+  document.getElementById('startDT').value = toLocalInput(start);
+  document.getElementById('endDT').value = toLocalInput(now);
+});
+</script>
+</body>
+</html>
