@@ -2,250 +2,81 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0" />
 <title>IoT Medical Dashboard — Health Monitor</title>
 
-<!-- Firebase compat -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 
-<!-- Chart.js -->
+<!-- Charts -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.min.js"></script>
-
-<!-- JustGage -->
 <script src="https://cdn.jsdelivr.net/npm/raphael@2.3.0/raphael.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/justgage@1.4.0/justgage.min.js"></script>
 
 <style>
-  :root {
-    --accent:#0078d7;
-    --muted:#6b7280;
-    --bg:#f4f7fb;
-    --card:#ffffff;
-  }
+:root {
+  --accent:#0078d7;--muted:#6b7280;--bg:#f4f7fb;--card:#ffffff;--text:#111;--font:'Poppins',sans-serif;--reading:#0078d7;
+}
+body.dark {--accent:#64b5f6;--muted:#9ca3af;--bg:#0d1117;--card:#161b22;--text:#e6edf3;--reading:#64b5f6;}
+body{font-family:var(--font);margin:0;background:var(--bg);color:var(--text);transition:background .3s,color .3s}
+header{background:var(--card);border-bottom:1px solid #e6eefb30;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;box-shadow:0 2px 8px rgba(0,0,0,0.05);}
+header img{width:42px;height:42px;border-radius:8px}
+header h1{margin:0;font-size:20px;color:var(--accent);flex:1 1 auto;font-weight:600}
+.status{display:flex;gap:8px;align-items:center}
+.dot{width:12px;height:12px;border-radius:50%;background:#ccc;border:1px solid #aaa;transition:background .3s,box-shadow .3s}
+.dot.connected{background:#00cc44;box-shadow:0 0 6px #00cc44;animation:blink 1s infinite ease-in-out}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.5}}
+.small{font-size:13px;color:var(--muted)}
+.btn{background:var(--accent);color:#fff;padding:8px 12px;border-radius:8px;border:none;cursor:pointer;font-size:14px;transition:.25s}
+.btn:hover{transform:scale(1.05);box-shadow:0 3px 8px rgba(0,0,0,.15)}
+.wrapper{padding:14px}
+.grid{display:grid;grid-template-columns:1fr 360px;gap:16px}
+.card{background:var(--card);border-radius:14px;padding:18px;box-shadow:0 8px 20px rgba(18,52,86,.08)}
+.wide{grid-column:1/-1}
+.values{display:flex;gap:12px;justify-content:space-between;flex-wrap:wrap;margin-top:10px}
+.valbox{flex:1 1 45%;background:#fafbff20;padding:10px;border-radius:8px;text-align:center}
+.valbox h4{margin:0;font-size:13px;color:var(--muted)}
+.valbox p{margin:6px 0 0;font-size:18px;color:var(--reading);font-weight:600;transition:color .3s}
+#ecgCanvas{height:300px!important;width:100%;overflow-x:auto;}
 
-  body {
-    font-family: "Segoe UI", Roboto, Arial;
-    margin: 0;
-    background: var(--bg);
-    color: #111;
-  }
+/* Alert bar */
+.alert-bar{position:fixed;top:-60px;left:50%;transform:translateX(-50%);padding:14px 24px;border-radius:10px;color:#fff;font-weight:600;text-align:center;transition:top .4s;z-index:9999;max-width:90%;display:flex;align-items:center;gap:12px;justify-content:space-between}
+.alert-bar.show{top:15px}
+.alert-critical{background:#d93025}
+.alert-warning{background:#e69500}
+.alert-btn{background:rgba(255,255,255,.2);border:none;color:#fff;font-weight:600;border-radius:6px;padding:6px 12px;cursor:pointer}
+.alert-btn:hover{background:rgba(255,255,255,.35)}
 
-  header {
-    background: var(--card);
-    border-bottom: 1px solid #e6eefb;
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-
-  header img {
-    width: 42px;
-    height: 42px;
-    border-radius: 8px;
-    object-fit: cover;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-  }
-
-  header h1 {
-    margin: 0;
-    font-size: 20px;
-    color: var(--accent);
-    flex: 1 1 auto;
-    word-break: break-word;
-  }
-
-  .status {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
-
-  .dot {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: #f3f3f3;
-    border: 1px solid #ccc;
-  }
-
-  .small {
-    font-size: 13px;
-    color: var(--muted);
-  }
-
-  .btn {
-    background: var(--accent);
-    color: white;
-    padding: 8px 12px;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    font-size: 14px;
-  }
-
-  .btn:hover { opacity: 0.9; }
-
-  .wrapper {
-    padding: 14px;
-  }
-
-  .grid {
-    display: grid;
-    grid-template-columns: 1fr 360px;
-    gap: 16px;
-    align-items: start;
-  }
-
-  .card {
-    background: var(--card);
-    border-radius: 12px;
-    padding: 16px;
-    box-shadow: 0 6px 18px rgba(18,52,86,0.06);
-  }
-
-  .wide { grid-column: 1 / -1; }
-
-  .values {
-    display: flex;
-    gap: 12px;
-    justify-content: space-between;
-    margin-top: 8px;
-    flex-wrap: wrap;
-  }
-
-  .valbox {
-    flex: 1 1 45%;
-    background: #fafbff;
-    padding: 10px;
-    border-radius: 8px;
-    text-align: center;
-  }
-
-  .valbox h4 {
-    margin: 0;
-    font-size: 13px;
-    color: var(--muted);
-  }
-
-  .valbox p {
-    margin: 6px 0 0;
-    font-size: 18px;
-    color: var(--accent);
-    font-weight: 600;
-  }
-
-  .controls {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-top: 10px;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .controls input,
-  .controls select {
-    padding: 8px;
-    border-radius: 6px;
-    border: 1px solid #ddd;
-    width: 100%;
-    max-width: 160px;
-  }
-
-  #ecgCanvas,
-  #historyCanvas {
-    height: 250px !important;
-    width: 100%;
-  }
-
-  .alert-bar {
-    position: fixed;
-    top: -60px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #d93025;
-    color: white;
-    padding: 12px 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.25);
-    font-weight: 600;
-    transition: top 0.4s ease;
-    z-index: 9999;
-    max-width: 90%;
-    text-align: center;
-  }
-  .alert-bar.show { top: 10px; }
-
-  /* ✅ Responsive layout */
-  @media (max-width: 1024px) {
-    .grid {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  @media (max-width: 600px) {
-    header {
-      flex-direction: column;
-      align-items: flex-start;
-      text-align: left;
-    }
-
-    header img {
-      width: 36px;
-      height: 36px;
-      margin-bottom: 4px;
-    }
-
-    header h1 {
-      font-size: 16px;
-    }
-
-    .btn {
-      width: 100%;
-      font-size: 15px;
-    }
-
-    .values .valbox {
-      flex: 1 1 100%;
-    }
-
-    #gBody, #gAmb {
-      width: 100% !important;
-      height: 140px !important;
-    }
-
-    #ecgCanvas, #historyCanvas {
-      height: 200px !important;
-    }
-  }
+@media(max-width:1024px){.grid{grid-template-columns:1fr}}
+@media(max-width:600px){header{flex-direction:column;align-items:flex-start}.btn{width:100%}#ecgCanvas{height:220px!important}}
 </style>
 </head>
 
 <body>
 
-<!-- 🔔 ALERT bar -->
-<div id="alertBar" class="alert-bar"></div>
+<!-- Alert -->
+<div id="alertBar" class="alert-bar"><span id="alertMsg">—</span><button class="alert-btn" id="alertOkBtn">OK</button></div>
 
 <header>
-  <img src="logo.jpeg" alt="IoT Logo" />
+  <img src="logo.jpeg" alt="logo" />
   <h1 id="userTitle">IoT Health Dashboard</h1>
-  <div class="status">
-    <div class="dot" id="connDot"></div>
-    <div class="small" id="connText">Disconnected</div>
-  </div>
+  <div class="status"><div class="dot" id="connDot"></div><div class="small" id="connText">Connecting...</div></div>
+  <button class="btn" onclick="toggleDarkMode()" style="background:#444">🌓 Theme</button>
+  <button class="btn" id="pauseBtn" style="background:#e69500">⏸ Pause ECG</button>
   <button class="btn" onclick="logout()">Logout</button>
 </header>
 
 <div class="wrapper">
   <div class="grid">
+
     <!-- Live ECG -->
     <div class="card">
-      <h3>Live ECG</h3>
-      <div class="small">Real-time ECG waveform (auto-scrolling).</div>
+      <h3 style="margin-top:0;color:var(--accent)">💓 Live ECG</h3>
+      <div class="small">Smooth scrolling ECG waveform (1000 points max)</div>
       <canvas id="ecgCanvas"></canvas>
       <div class="values">
         <div class="valbox"><h4>Latest ECG</h4><p id="latestEcg">--</p></div>
@@ -255,12 +86,15 @@
 
     <!-- Vitals -->
     <div class="card">
-      <h3>Vitals</h3>
-      <div id="gBody" style="width:100%;height:160px;margin:auto;"></div>
-      <div id="gAmb" style="width:100%;height:160px;margin:auto;"></div>
-      <div class="values" style="margin-top:10px">
-        <div class="valbox"><h4>Body Temp</h4><p id="numBody">-- °C</p></div>
-        <div class="valbox"><h4>Ambient Temp</h4><p id="numAmb">-- °C</p></div>
+      <h3 style="margin-top:0;color:var(--accent)">Vitals</h3>
+      <h4 style="text-align:center;color:var(--accent)">🌡️ Body Temperature</h4>
+      <div id="gBody" style="width:100%;height:160px;margin:auto;margin-bottom:20px;"></div>
+      <h4 style="text-align:center;color:var(--accent)">🌬️ Ambient Temperature</h4>
+      <div id="gAmb" style="width:100%;height:160px;margin:auto;margin-bottom:20px;"></div>
+
+      <div class="values">
+        <div class="valbox"><h4>Body Temp</h4><p id="numBody">-- °C / -- °F</p></div>
+        <div class="valbox"><h4>Ambient Temp</h4><p id="numAmb">-- °C / -- °F</p></div>
       </div>
       <div class="values">
         <div class="valbox"><h4>Heart Rate</h4><p id="numHR">-- BPM</p></div>
@@ -268,10 +102,10 @@
       </div>
     </div>
 
-    <!-- History Viewer -->
+    <!-- History -->
     <div class="card wide">
-      <h3>📊 Historical Data</h3>
-      <div class="small">Select a time window to view ECG + temperature readings.</div>
+      <h3 style="margin-top:0;color:var(--accent)">📊 Past Records</h3>
+      <div class="small">Select a time window to view ECG and Temperature trends.</div>
       <div class="controls">
         <label class="small">Start</label><input id="startDT" type="datetime-local"/>
         <label class="small">End</label><input id="endDT" type="datetime-local"/>
@@ -283,97 +117,85 @@
           <option value="60">Last 1 hr</option>
         </select>
         <button id="loadBtn" class="btn">Load</button>
-        <button id="refreshBtn" class="btn" style="background:#2a9d8f">Refresh Live</button>
       </div>
-      <canvas id="historyCanvas" style="margin-top:12px;"></canvas>
+      <canvas id="historyCanvas" style="margin-top:16px;height:260px;width:100%;"></canvas>
     </div>
+
   </div>
 </div>
 
 <script>
-/* 🔐 Firebase Configuration */
-const firebaseConfig = {
-  apiKey: "AIzaSyBwGtPqCsq9G74bem7C6qWuJNDoqTH6sts",
-  authDomain: "iot-health-monitor-f0530.firebaseapp.com",
-  databaseURL: "https://iot-health-monitor-f0530-default-rtdb.firebaseio.com"
-};
-
+/* === Firebase === */
+const firebaseConfig={apiKey:"AIzaSyBwGtPqCsq9G74bem7C6qWuJNDoqTH6sts",authDomain:"iot-health-monitor-f0530.firebaseapp.com",databaseURL:"https://iot-health-monitor-f0530-default-rtdb.firebaseio.com"};
 firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.database();
+const auth=firebase.auth(),db=firebase.database();
 
-/* ✅ Auth Check */
-auth.onAuthStateChanged((user) => {
-  if (!user) {
-    window.location.href = "login.html";
-  } else {
-    document.getElementById("userTitle").innerText = "IoT Health Dashboard — " + user.email;
-  }
-});
+/* === Auth === */
+auth.onAuthStateChanged(u=>{if(!u)window.location.href="login.html";else userTitle.innerText="IoT Dashboard — "+u.email;});
+function logout(){auth.signOut().then(()=>window.location.href="login.html");}
 
-/* ✅ Logout */
-function logout() {
-  auth.signOut().then(() => window.location.href = "login.html");
-}
+/* === Dark Mode === */
+function toggleDarkMode(){document.body.classList.toggle("dark");localStorage.setItem("darkMode",document.body.classList.contains("dark"));}
+if(localStorage.getItem("darkMode")==="true")document.body.classList.add("dark");
 
-/* === Dashboard Logic === */
-const connDot=document.getElementById('connDot');
-const connText=document.getElementById('connText');
-const latestEcgEl=document.getElementById('latestEcg');
-const lastUpdEl=document.getElementById('lastUpdate');
-const numBody=document.getElementById('numBody');
-const numAmb=document.getElementById('numAmb');
-const numHR=document.getElementById('numHR');
-const numSPO2=document.getElementById('numSPO2');
-const alertBar=document.getElementById('alertBar');
-let alertTimeout;
-
-const gBody=new JustGage({id:'gBody',value:0,min:20,max:45,title:'Body Temp (°C)',levelColors:['#00cc66','#ffcc00','#ff3300']});
-const gAmb=new JustGage({id:'gAmb',value:0,min:0,max:50,title:'Ambient (°C)',levelColors:['#00cc66','#ffcc00','#ff3300']});
-
+/* === ECG Chart === */
+let ecgPaused=false;
+pauseBtn.onclick=()=>{ecgPaused=!ecgPaused;pauseBtn.innerText=ecgPaused?"▶ Resume ECG":"⏸ Pause ECG";pauseBtn.style.background=ecgPaused?"#28a745":"#e69500";}
 const ecgCtx=document.getElementById('ecgCanvas').getContext('2d');
-const ecgChart=new Chart(ecgCtx,{type:'line',data:{labels:[],datasets:[{label:'ECG',data:[],borderColor:'#d33',tension:0.15,pointRadius:0,borderWidth:1.5}]},options:{animation:false,responsive:true,scales:{x:{display:false},y:{min:0,max:1024}},plugins:{legend:{display:false}}}});
+const ecgChart=new Chart(ecgCtx,{type:'line',data:{labels:[],datasets:[{label:'ECG',data:[],borderColor:'#ff3b3b',borderWidth:1.8,tension:0.15,pointRadius:0}]},options:{animation:false,responsive:true,scales:{x:{display:false},y:{min:0,max:1024}},plugins:{legend:{display:false}}}});
+let ecgMaxPoints=1000;
+function addEcgPoint(label,value){if(ecgPaused)return;ecgChart.data.labels.push(label);ecgChart.data.datasets[0].data.push(value);if(ecgChart.data.labels.length>ecgMaxPoints){ecgChart.data.labels.shift();ecgChart.data.datasets[0].data.shift();}ecgChart.update('none');}
 
-const historyCtx=document.getElementById('historyCanvas').getContext('2d');
-let historyChart=new Chart(historyCtx,{type:'line',data:{labels:[],datasets:[
-  {label:'ECG',data:[],borderColor:'#d33',tension:0.2,pointRadius:0,yAxisID:'y'},
-  {label:'Body Temp',data:[],borderColor:'#0078d7',tension:0.2,pointRadius:2,yAxisID:'y1'},
-  {label:'Ambient Temp',data:[],borderColor:'#00a884',tension:0.2,pointRadius:2,yAxisID:'y1'}
-]},options:{responsive:true,interaction:{mode:'index'},stacked:false,scales:{y:{position:'left',min:0,max:110},y1:{position:'right',min:0,max:50,grid:{drawOnChartArea:false}}}}});
+/* === Gauges === */
+const gBody=new JustGage({id:'gBody',value:0,min:20,max:45,title:'Body Temp (°C)',levelColors:['#00cc66','#ffcc00','#ff3300']});
+const gAmb=new JustGage({id:'gAmb',value:0,min:0,max:50,title:'Ambient Temp (°C)',levelColors:['#00cc66','#ffcc00','#ff3300']});
 
-function setConnected(ok){connDot.style.background=ok?'#14a44d':'#f3f3f3';connText.innerText=ok?'Connected':'Disconnected';}
-function showAlert(msg){alertBar.textContent=msg;alertBar.classList.add('show');clearTimeout(alertTimeout);alertTimeout=setTimeout(()=>alertBar.classList.remove('show'),6000);}
+/* === Alerts (Show once + 3 min reminder) === */
+const shownAlerts=new Map();const reminderInterval=3*60*1000;
+const alertBar=document.getElementById('alertBar'),alertMsg=document.getElementById('alertMsg'),alertOkBtn=document.getElementById('alertOkBtn');
+let alertTimeout;
+function showAlertOnce(key,msg,type='critical'){const now=Date.now(),last=shownAlerts.get(key)||0;if(now-last<reminderInterval)return;shownAlerts.set(key,now);alertMsg.textContent=msg;alertBar.className=`alert-bar alert-${type} show`;clearTimeout(alertTimeout);alertTimeout=setTimeout(()=>alertBar.classList.remove('show'),6000);}
+alertOkBtn.onclick=()=>{alertBar.classList.remove('show');clearTimeout(alertTimeout);}
+function toF(c){return (c*9/5+32).toFixed(2);}
 
-let lastValid={objectTemp:null,ambientTemp:null,heartRate:null,spo2:null,ecg:null};
-const rootRef=db.ref('UpdatedReadings');
-
-rootRef.limitToLast(1).on('value',snap=>{
-  setConnected(true);
-  if(!snap.exists())return;
-  const val=snap.val();const key=Object.keys(val).pop();const entry=val[key];
-  lastUpdEl.innerText=key.replace(/_/g,' ');
-  if(entry.Temperature){
-    const obj=parseFloat(entry.Temperature.ObjectTemp);
-    const amb=parseFloat(entry.Temperature.AmbientTemp);
-    if(!isNaN(obj)){lastValid.objectTemp=obj;gBody.refresh(obj);numBody.innerText=obj.toFixed(2)+' °C';}
-    if(!isNaN(amb)){lastValid.ambientTemp=amb;gAmb.refresh(amb);numAmb.innerText=amb.toFixed(2)+' °C';}
-  }
-  if(entry.PulseOximeter){
-    const hr=parseFloat(entry.PulseOximeter.HeartRate);
-    const sp=parseFloat(entry.PulseOximeter.SpO2);
-    if(!isNaN(hr)){lastValid.heartRate=hr;numHR.innerText=hr.toFixed(1)+' BPM';}
-    if(!isNaN(sp)){lastValid.spo2=sp;numSPO2.innerText=sp.toFixed(1)+' %';}
-  }
-  if(entry.ECG!=null&&!isNaN(entry.ECG)){
-    lastValid.ecg=entry.ECG;
-    latestEcgEl.innerText=lastValid.ecg;
-    ecgChart.data.labels.push(key.split('_')[1]);
-    ecgChart.data.datasets[0].data.push(lastValid.ecg);
-    if(ecgChart.data.labels.length>300){ecgChart.data.labels.shift();ecgChart.data.datasets[0].data.shift();}
-    ecgChart.update('none');
-  }
+/* === Realtime Data === */
+db.ref('UpdatedReadings').limitToLast(1).on('value',snap=>{
+ if(!snap.exists())return;
+ const v=snap.val();const k=Object.keys(v).pop();const e=v[k];
+ lastUpdate.innerText=k.replace(/_/g,' ');
+ if(e.Temperature){
+   const o=parseFloat(e.Temperature.ObjectTemp),a=parseFloat(e.Temperature.AmbientTemp);
+   if(!isNaN(o)){gBody.refresh(o);numBody.innerText=`${o.toFixed(2)} °C / ${toF(o)} °F`;
+     if(o>=38)showAlertOnce('temp_high',`🔥 High Body Temp (${o.toFixed(1)} °C / ${toF(o)} °F)`,'warning');
+     if(o<35)showAlertOnce('temp_low',`🥶 Low Body Temp (${o.toFixed(1)} °C / ${toF(o)} °F)`,'critical');
+   }
+   if(!isNaN(a)){gAmb.refresh(a);numAmb.innerText=`${a.toFixed(2)} °C / ${toF(a)} °F`;}
+ }
+ if(e.PulseOximeter){
+   const hr=parseFloat(e.PulseOximeter.HeartRate),sp=parseFloat(e.PulseOximeter.SpO2);
+   if(!isNaN(hr)){numHR.innerText=hr.toFixed(1)+' BPM';
+     if(hr>100)showAlertOnce('tachy',`⚠️ Tachycardia (HR ${hr.toFixed(1)} BPM)`,'critical');
+     if(hr<60&&hr>0)showAlertOnce('brady',`⚠️ Bradycardia (HR ${hr.toFixed(1)} BPM)`,'warning');
+   }
+   if(!isNaN(sp)){numSPO2.innerText=sp.toFixed(1)+' %';
+     if(sp<95)showAlertOnce('spo2_low',`🩸 Low SpO₂ (${sp.toFixed(1)}%)`,'critical');
+     else if(sp>=95&&sp<=97)showAlertOnce('spo2_slight',`ℹ️ Slightly Low SpO₂ (${sp.toFixed(1)}%)`,'warning');
+   }
+ }
+ if(e.ECG!=null&&!isNaN(e.ECG)){latestEcg.innerText=e.ECG;addEcgPoint(k.split('_')[1],e.ECG);}
 });
-db.ref('.info/connected').on('value',s=>setConnected(!!s.val()));
+
+/* === History Loader === */
+const histCtx=document.getElementById('historyCanvas').getContext('2d');
+const histChart=new Chart(histCtx,{type:'line',data:{labels:[],datasets:[
+ {label:'ECG',data:[],borderColor:'#d33',tension:0.15,pointRadius:0,yAxisID:'y'},
+ {label:'Body Temp',data:[],borderColor:'#0078d7',tension:0.2,pointRadius:2,yAxisID:'y1'},
+ {label:'Ambient Temp',data:[],borderColor:'#00a884',tension:0.2,pointRadius:2,yAxisID:'y1'}
+]},options:{responsive:true,interaction:{mode:'index'},stacked:false,scales:{y:{position:'left',min:0,max:110},y1:{position:'right',min:0,max:50,grid:{drawOnChartArea:false}}}}});
+preset.addEventListener('change',e=>{const mins=+e.target.value;if(!mins)return;const now=new Date(),start=new Date(now-mins*60*1000);const f=d=>d.toISOString().slice(0,16);startDT.value=f(start);endDT.value=f(now);});
+loadBtn.onclick=async()=>{const s=new Date(startDT.value),e=new Date(endDT.value);if(isNaN(s)||isNaN(e)||s>=e)return alert('Invalid range');const snap=await db.ref('UpdatedReadings').get();if(!snap.exists())return alert('No data');const d=snap.val();const lbls=[],ecg=[],b=[],a=[];for(const k of Object.keys(d).sort()){const t=parseTimestampKey(k);if(!t)continue;if(t>=s&&t<=e){const r=d[k];lbls.push(t.toLocaleTimeString());ecg.push(r.ECG||null);b.push(r.Temperature?.ObjectTemp||null);a.push(r.Temperature?.AmbientTemp||null);}}if(!lbls.length)return alert('No entries in range');histChart.data.labels=lbls;histChart.data.datasets[0].data=ecg;histChart.data.datasets[1].data=b;histChart.data.datasets[2].data=a;histChart.update();}
+function parseTimestampKey(k){try{const[d,t]=k.split('_');const[Y,M,D]=d.split('-').map(Number);const[h,m,s]=t.split('-').map(Number);return new Date(Y,M-1,D,h,m,s);}catch{return null;}}
+db.ref('.info/connected').on('value',s=>{const ok=!!s.val();connDot.classList.toggle('connected',ok);connText.innerText=ok?'Connected':'Disconnected';});
 </script>
 </body>
 </html>
