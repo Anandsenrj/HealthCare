@@ -130,7 +130,7 @@ const db = firebase.database();
 auth.onAuthStateChanged((user) => {
   if (!user) {
     console.warn("⚠️ Not logged in. Redirecting to login page...");
-    window.location.href = "login.html";
+    window.location.href = "index.html";
   } else {
     document.getElementById("userTitle").innerText = "IoT Health Dashboard — " + user.email;
     console.log("✅ Logged in as:", user.email);
@@ -258,3 +258,4 @@ db.ref('.info/connected').on('value',s=>setConnected(!!s.val()));
 </script>
 </body>
 </html>
+
