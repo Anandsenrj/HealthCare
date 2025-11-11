@@ -142,7 +142,7 @@ function logout() {
   auth.signOut()
     .then(() => {
       console.log("User signed out.");
-      window.location.href = "login.html";
+      window.location.href = "inedx.html";
     })
     .catch((error) => {
       console.error("Logout error:", error.message);
@@ -258,4 +258,5 @@ db.ref('.info/connected').on('value',s=>setConnected(!!s.val()));
 </script>
 </body>
 </html>
+
 
