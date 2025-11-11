@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
 <title>IoT Medical Dashboard — Health Monitor</title>
 
 <!-- Firebase compat -->
@@ -19,44 +19,220 @@
 
 <style>
   :root {
-    --accent:#0078d7;--muted:#6b7280;--bg:#f4f7fb;--card:#ffffff;
+    --accent:#0078d7;
+    --muted:#6b7280;
+    --bg:#f4f7fb;
+    --card:#ffffff;
   }
-  body{font-family:"Segoe UI",Roboto,Arial;margin:0;background:var(--bg);color:#111}
-  header{background:var(--card);border-bottom:1px solid #e6eefb;padding:18px 24px;display:flex;align-items:center;gap:20px;}
-  header h1{margin:0;font-size:20px;color:var(--accent)}
-  .wrapper{padding:18px;}
-  .grid{display:grid;grid-template-columns:1fr 360px;gap:18px;align-items:start;}
-  .card{background:var(--card);border-radius:12px;padding:16px;box-shadow:0 6px 18px rgba(18,52,86,0.06);}
-  .wide{grid-column:1/-1}
-  .status{display:flex;gap:12px;align-items:center}
-  .dot{width:12px;height:12px;border-radius:50%;background:#f3f3f3;border:1px solid #ccc}
-  .small{font-size:13px;color:var(--muted)}
-  .btn{background:var(--accent);color:white;padding:8px 12px;border-radius:8px;border:none;cursor:pointer}
-  .btn:hover{opacity:0.9}
-  .values{display:flex;gap:12px;justify-content:space-between;margin-top:8px}
-  .valbox{flex:1;background:#fafbff;padding:10px;border-radius:8px;text-align:center}
-  .valbox h4{margin:0;font-size:13px;color:var(--muted)}
-  .valbox p{margin:6px 0 0;font-size:18px;color:var(--accent);font-weight:600}
-  .controls{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;align-items:center;justify-content:center}
-  .controls input,.controls select{padding:8px;border-radius:6px;border:1px solid #ddd}
-  #ecgCanvas,#historyCanvas{height:300px!important;width:100%;}
-  .alert-bar{
-    position:fixed;top:-60px;left:50%;transform:translateX(-50%);
-    background:#d93025;color:white;padding:12px 20px;border-radius:8px;
-    box-shadow:0 4px 10px rgba(0,0,0,0.25);font-weight:600;transition:top 0.4s ease;
-    z-index:9999;max-width:90%;text-align:center;
+
+  body {
+    font-family: "Segoe UI", Roboto, Arial;
+    margin: 0;
+    background: var(--bg);
+    color: #111;
   }
-  .alert-bar.show{top:10px;}
+
+  header {
+    background: var(--card);
+    border-bottom: 1px solid #e6eefb;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  header img {
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    object-fit: cover;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
+
+  header h1 {
+    margin: 0;
+    font-size: 20px;
+    color: var(--accent);
+    flex: 1 1 auto;
+    word-break: break-word;
+  }
+
+  .status {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #f3f3f3;
+    border: 1px solid #ccc;
+  }
+
+  .small {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .btn {
+    background: var(--accent);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+  }
+
+  .btn:hover { opacity: 0.9; }
+
+  .wrapper {
+    padding: 14px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 16px;
+    align-items: start;
+  }
+
+  .card {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 6px 18px rgba(18,52,86,0.06);
+  }
+
+  .wide { grid-column: 1 / -1; }
+
+  .values {
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+
+  .valbox {
+    flex: 1 1 45%;
+    background: #fafbff;
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+  }
+
+  .valbox h4 {
+    margin: 0;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .valbox p {
+    margin: 6px 0 0;
+    font-size: 18px;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .controls input,
+  .controls select {
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    width: 100%;
+    max-width: 160px;
+  }
+
+  #ecgCanvas,
+  #historyCanvas {
+    height: 250px !important;
+    width: 100%;
+  }
+
+  .alert-bar {
+    position: fixed;
+    top: -60px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #d93025;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+    font-weight: 600;
+    transition: top 0.4s ease;
+    z-index: 9999;
+    max-width: 90%;
+    text-align: center;
+  }
+  .alert-bar.show { top: 10px; }
+
+  /* ✅ Responsive layout */
+  @media (max-width: 1024px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 600px) {
+    header {
+      flex-direction: column;
+      align-items: flex-start;
+      text-align: left;
+    }
+
+    header img {
+      width: 36px;
+      height: 36px;
+      margin-bottom: 4px;
+    }
+
+    header h1 {
+      font-size: 16px;
+    }
+
+    .btn {
+      width: 100%;
+      font-size: 15px;
+    }
+
+    .values .valbox {
+      flex: 1 1 100%;
+    }
+
+    #gBody, #gAmb {
+      width: 100% !important;
+      height: 140px !important;
+    }
+
+    #ecgCanvas, #historyCanvas {
+      height: 200px !important;
+    }
+  }
 </style>
 </head>
+
 <body>
 
 <!-- 🔔 ALERT bar -->
 <div id="alertBar" class="alert-bar"></div>
 
 <header>
+  <img src="logo.jpeg" alt="IoT Logo" />
   <h1 id="userTitle">IoT Health Dashboard</h1>
-  <div style="flex:1"></div>
   <div class="status">
     <div class="dot" id="connDot"></div>
     <div class="small" id="connText">Disconnected</div>
@@ -80,8 +256,8 @@
     <!-- Vitals -->
     <div class="card">
       <h3>Vitals</h3>
-      <div id="gBody" style="width:260px;height:160px;margin:auto;"></div>
-      <div id="gAmb" style="width:260px;height:160px;margin:auto;"></div>
+      <div id="gBody" style="width:100%;height:160px;margin:auto;"></div>
+      <div id="gAmb" style="width:100%;height:160px;margin:auto;"></div>
       <div class="values" style="margin-top:10px">
         <div class="valbox"><h4>Body Temp</h4><p id="numBody">-- °C</p></div>
         <div class="valbox"><h4>Ambient Temp</h4><p id="numAmb">-- °C</p></div>
@@ -126,30 +302,21 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.database();
 
-/* ✅ Check authentication */
+/* ✅ Auth Check */
 auth.onAuthStateChanged((user) => {
   if (!user) {
-    console.warn("⚠️ Not logged in. Redirecting to login page...");
-    window.location.href = "index.html";
+    window.location.href = "login.html";
   } else {
     document.getElementById("userTitle").innerText = "IoT Health Dashboard — " + user.email;
-    console.log("✅ Logged in as:", user.email);
   }
 });
 
-/* ✅ Logout button function */
+/* ✅ Logout */
 function logout() {
-  auth.signOut()
-    .then(() => {
-      console.log("User signed out.");
-      window.location.href = "index.html";
-    })
-    .catch((error) => {
-      console.error("Logout error:", error.message);
-    });
+  auth.signOut().then(() => window.location.href = "login.html");
 }
 
-/* === UI & Chart Logic === */
+/* === Dashboard Logic === */
 const connDot=document.getElementById('connDot');
 const connText=document.getElementById('connText');
 const latestEcgEl=document.getElementById('latestEcg');
@@ -159,12 +326,14 @@ const numAmb=document.getElementById('numAmb');
 const numHR=document.getElementById('numHR');
 const numSPO2=document.getElementById('numSPO2');
 const alertBar=document.getElementById('alertBar');
+let alertTimeout;
 
 const gBody=new JustGage({id:'gBody',value:0,min:20,max:45,title:'Body Temp (°C)',levelColors:['#00cc66','#ffcc00','#ff3300']});
 const gAmb=new JustGage({id:'gAmb',value:0,min:0,max:50,title:'Ambient (°C)',levelColors:['#00cc66','#ffcc00','#ff3300']});
 
 const ecgCtx=document.getElementById('ecgCanvas').getContext('2d');
 const ecgChart=new Chart(ecgCtx,{type:'line',data:{labels:[],datasets:[{label:'ECG',data:[],borderColor:'#d33',tension:0.15,pointRadius:0,borderWidth:1.5}]},options:{animation:false,responsive:true,scales:{x:{display:false},y:{min:0,max:1024}},plugins:{legend:{display:false}}}});
+
 const historyCtx=document.getElementById('historyCanvas').getContext('2d');
 let historyChart=new Chart(historyCtx,{type:'line',data:{labels:[],datasets:[
   {label:'ECG',data:[],borderColor:'#d33',tension:0.2,pointRadius:0,yAxisID:'y'},
@@ -173,43 +342,30 @@ let historyChart=new Chart(historyCtx,{type:'line',data:{labels:[],datasets:[
 ]},options:{responsive:true,interaction:{mode:'index'},stacked:false,scales:{y:{position:'left',min:0,max:110},y1:{position:'right',min:0,max:50,grid:{drawOnChartArea:false}}}}});
 
 function setConnected(ok){connDot.style.background=ok?'#14a44d':'#f3f3f3';connText.innerText=ok?'Connected':'Disconnected';}
-function parseTimestampKey(key){if(!key)return null;try{const[d,t]=key.split('_');const[Y,M,D]=d.split('-').map(Number);const[h,m,s]=t.split('-').map(Number);return new Date(Y,M-1,D,h,m,s);}catch{return null;}}
 function showAlert(msg){alertBar.textContent=msg;alertBar.classList.add('show');clearTimeout(alertTimeout);alertTimeout=setTimeout(()=>alertBar.classList.remove('show'),6000);}
-let alertTimeout;
 
 let lastValid={objectTemp:null,ambientTemp:null,heartRate:null,spo2:null,ecg:null};
-
 const rootRef=db.ref('UpdatedReadings');
+
 rootRef.limitToLast(1).on('value',snap=>{
   setConnected(true);
   if(!snap.exists())return;
   const val=snap.val();const key=Object.keys(val).pop();const entry=val[key];
   lastUpdEl.innerText=key.replace(/_/g,' ');
-
   if(entry.Temperature){
     const obj=parseFloat(entry.Temperature.ObjectTemp);
     const amb=parseFloat(entry.Temperature.AmbientTemp);
     if(!isNaN(obj)){lastValid.objectTemp=obj;gBody.refresh(obj);numBody.innerText=obj.toFixed(2)+' °C';}
-    else if(lastValid.objectTemp!=null){gBody.refresh(lastValid.objectTemp);numBody.innerText=lastValid.objectTemp.toFixed(2)+' °C';}
     if(!isNaN(amb)){lastValid.ambientTemp=amb;gAmb.refresh(amb);numAmb.innerText=amb.toFixed(2)+' °C';}
-    else if(lastValid.ambientTemp!=null){gAmb.refresh(lastValid.ambientTemp);numAmb.innerText=lastValid.ambientTemp.toFixed(2)+' °C';}
-    if(lastValid.objectTemp>=38)showAlert('⚠️ High body temperature (≥38°C)');
   }
-
   if(entry.PulseOximeter){
     const hr=parseFloat(entry.PulseOximeter.HeartRate);
     const sp=parseFloat(entry.PulseOximeter.SpO2);
     if(!isNaN(hr)){lastValid.heartRate=hr;numHR.innerText=hr.toFixed(1)+' BPM';}
-    else if(lastValid.heartRate!=null)numHR.innerText=lastValid.heartRate.toFixed(1)+' BPM';
     if(!isNaN(sp)){lastValid.spo2=sp;numSPO2.innerText=sp.toFixed(1)+' %';}
-    else if(lastValid.spo2!=null)numSPO2.innerText=lastValid.spo2.toFixed(1)+' %';
-    if(lastValid.heartRate>100)showAlert('⚠️ Tachycardia (HR >100 BPM)');
-    if(lastValid.heartRate<60&&lastValid.heartRate>0)showAlert('⚠️ Bradycardia (HR <60 BPM)');
-    if(lastValid.spo2<95)showAlert('⚠️ Low SpO₂ (<95%)');
   }
-
-  if(entry.ECG!=null&&!isNaN(entry.ECG))lastValid.ecg=entry.ECG;
-  if(lastValid.ecg!=null){
+  if(entry.ECG!=null&&!isNaN(entry.ECG)){
+    lastValid.ecg=entry.ECG;
     latestEcgEl.innerText=lastValid.ecg;
     ecgChart.data.labels.push(key.split('_')[1]);
     ecgChart.data.datasets[0].data.push(lastValid.ecg);
@@ -217,47 +373,7 @@ rootRef.limitToLast(1).on('value',snap=>{
     ecgChart.update('none');
   }
 });
-
-document.getElementById('preset').addEventListener('change',e=>{
-  const mins=+e.target.value;if(!mins)return;
-  const now=new Date(),start=new Date(now.getTime()-mins*60*1000);
-  const f=d=>d.toISOString().slice(0,16);
-  startDT.value=f(start);endDT.value=f(now);
-});
-
-document.getElementById('loadBtn').onclick=async()=>{
-  const s=new Date(startDT.value),e=new Date(endDT.value);
-  if(isNaN(s)||isNaN(e)||s>=e)return alert('Invalid time range');
-  const snap=await rootRef.get();if(!snap.exists())return alert('No data');
-  const data=snap.val();const labels=[],ecg=[],b=[],a=[];
-  for(const k of Object.keys(data).sort()){
-    const d=parseTimestampKey(k);if(!d)continue;
-    if(d>=s&&d<=e){
-      const r=data[k];
-      labels.push(d.toLocaleTimeString());
-      ecg.push(r.ECG||null);
-      b.push(r.Temperature?.ObjectTemp||null);
-      a.push(r.Temperature?.AmbientTemp||null);
-    }
-  }
-  if(!labels.length)return alert('No entries in range');
-  historyChart.data.labels=labels;
-  historyChart.data.datasets[0].data=ecg;
-  historyChart.data.datasets[1].data=b;
-  historyChart.data.datasets[2].data=a;
-  historyChart.update();
-};
-
-document.getElementById('refreshBtn').onclick=()=>{
-  ecgChart.data.labels=[];ecgChart.data.datasets[0].data=[];
-  historyChart.data.labels=[];historyChart.data.datasets.forEach(d=>d.data=[]);
-  ecgChart.update();historyChart.update();
-};
-
 db.ref('.info/connected').on('value',s=>setConnected(!!s.val()));
 </script>
 </body>
 </html>
-
-
-
