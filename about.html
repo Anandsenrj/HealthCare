@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About — HealthCare Monitoring</title>
+
+<link href="https://fonts.googleapis.com/css2?family=OnePlus+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --nav-bg:#0D47A1;
+  --accent:#0D47A1;
+  --bg:#f4f8ff;
+  --card:#ffffff;
+  --muted:#6b7280;
+}
+
+/* Dark Mode Upgrade */
+body.dark{
+  background:#071828 !important;
+  color:#e9eef5 !important;
+}
+body.dark .topbar{
+  background:#071428 !important;
+  box-shadow:0 10px 34px rgba(0,0,0,0.5) !important;
+}
+body.dark .nav a{
+  color:#e9eef5 !important;
+}
+body.dark .card{
+  background:#0d1b2b !important;
+  color:#e9eef5 !important;
+  box-shadow:0 18px 48px rgba(0,0,0,0.6) !important;
+}
+body.dark .ghost{
+  border:1px solid rgba(255,255,255,0.4) !important;
+  color:white !important;
+}
+
+/* Basic Layout */
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+font-family: 'OnePlus Sans', sans-serif !important;
+  background:var(--bg);
+  color:#111;
+  transition:background .25s,color .25s;
+  opacity:0;
+  animation:fadeIn .4s forwards .06s;
+}
+@keyframes fadeIn{to{opacity:1}}
+
+.topbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:12px 20px;
+  background:var(--nav-bg);
+  color:#fff;
+  box-shadow:0 10px 26px rgba(13,71,161,0.15);
+  position:sticky;
+  top:0;
+  z-index:90;
+}
+.left{display:flex;align-items:center;gap:16px}
+.logo img{width:44px;height:44px;border-radius:8px}
+.brand h1{margin:0;font-size:18px;color:#fff;font-weight:600}
+
+.nav{display:flex;gap:12px;margin-left:12px}
+.nav a{
+  color:white;
+  text-decoration:none;
+  padding:8px 12px;
+  border-radius:8px;
+  font-weight:600;
+  transition:.18s;
+}
+.nav a:hover{
+  background:rgba(255,255,255,0.15);
+  transform:translateY(-2px);
+}
+
+.actions{display:flex;align-items:center;gap:10px}
+.ghost{
+  background:transparent;
+  border:1px solid rgba(255,255,255,0.2);
+  padding:8px 10px;
+  border-radius:10px;
+  cursor:pointer;
+  color:white;
+}
+
+.hamb{display:none;background:transparent;border:none;color:#fff;font-size:22px}
+
+/* Text readability fix */
+body.dark p,
+body.dark h1,
+body.dark h2,
+body.dark h3,
+body.dark h4,
+body.dark label {
+  color: #e8edf5 !important;
+}
+
+
+/* Mobile menu */
+.mobile-menu{
+  display:none;
+  flex-direction:column;
+  padding:12px;
+  background:var(--nav-bg);
+}
+.mobile-menu a{
+  padding:10px 6px;
+  border-radius:8px;
+  text-decoration:none;
+  color:white;
+  font-weight:500;
+}
+
+.container{
+  max-width:900px;
+  margin:40px auto;
+  padding:20px;
+  animation:slideUp .4s ease-out .1s both;
+}
+@keyframes slideUp{
+  from{opacity:0;transform:translateY(10px)}
+  to{opacity:1;transform:none}
+}
+
+.card{
+  background:var(--card);
+  padding:30px;
+  border-radius:14px;
+  box-shadow:0 14px 32px rgba(13,71,161,0.08);
+  transition:transform .18s;
+}
+.card:hover{transform:translateY(-4px)}
+
+h2{
+  margin-bottom:12px;
+  font-size:26px;
+  color:var(--accent);
+}
+
+p{
+  font-size:16px;
+  line-height:1.7;
+  margin-bottom:14px;
+  color:#333;
+}
+
+ul{
+  margin:12px 0 12px 20px;
+}
+li{
+  margin-bottom:8px;
+  line-height:1.6;
+}
+
+/* Responsive */
+@media(max-width:760px){
+  .nav{display:none}
+  .hamb{display:block}
+  .container{padding:10px}
+}
+
+/* --- FIX: Cards visible in dark mode --- */
+body.dark .card {
+  background: #142235 !important;        /* Soft dark blue */
+  border: 1px solid #2a3c55 !important;  /* Visible outline */
+  color: #e6ebf3 !important;             /* Readable text */
+  box-shadow: 0 12px 26px rgba(0,0,0,0.6) !important;
+}
+
+/* Fix text inside value boxes */
+body.dark .valbox {
+  background: #1b2d44 !important;
+  color: #e6ebf3 !important;
+}
+
+/* Fix small text */
+body.dark .small {
+  color: #c8d1df !important;
+}
+
+/* Fix gauge container visibility */
+body.dark #gBody,
+body.dark #gAmb {
+  background: transparent !important;
+}
+
+</style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<header class="topbar">
+  <div class="left">
+    <div class="logo">
+      <img src="logo.jpeg" onerror="this.src='https://cdn-icons-png.flaticon.com/512/2966/2966327.png'" alt="">
+    </div>
+    <div class="brand"><h1>HealthCare Monitoring</h1></div>
+
+    <nav class="nav">
+      <a href="dashboard.html">Home</a>
+      <a href="about.html" class="active">About</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+  </div>
+
+  <div class="actions">
+    <button id="themeToggle" class="ghost">🌓</button>
+    <button class="hamb" id="hamb">☰</button>
+  </div>
+</header>
+
+<!-- MOBILE MENU -->
+<div id="mobileMenu" class="mobile-menu">
+  <a href="dashboard.html">Home</a>
+  <a href="about.html">About</a>
+  <a href="contact.html">Contact</a>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="container">
+  <div class="card">
+    <h2>About Our HealthCare Monitoring System</h2>
+
+    <p>
+      The <strong>Smart HealthCare Monitoring System</strong> is an advanced real-time patient
+      monitoring solution designed to ensure continuous tracking of vital health parameters.
+      It integrates IoT sensors, cloud-based analytics, and live data visualization to deliver
+      accurate medical insights instantly — anytime, anywhere.
+    </p>
+
+    <p>
+      Our system helps healthcare professionals and caretakers monitor critical parameters
+      such as:
+    </p>
+
+    <ul>
+      <li>Real-time ECG waveform monitoring</li>
+      <li>Heart Rate (BPM)</li>
+      <li>Blood Oxygen (SpO₂)</li>
+      <li>Body & Ambient Temperature</li>
+      <li>Live alerts for abnormal readings</li>
+    </ul>
+
+    <p>
+      The dashboard is engineered with high precision, ensuring smooth ECG graph rendering,
+      interactive historical data charts, and intelligent alert mechanisms for abnormal conditions.
+      It empowers doctors, hospitals, and individuals to make data-driven health decisions.
+    </p>
+
+    <h3 style="margin-top:20px;color:var(--accent)">Key Features</h3>
+    <ul>
+      <li>⚡ Live ECG Streaming (1000+ data points)</li>
+      <li>🌡️ Intelligent temperature & SpO₂ detection</li>
+      <li>📊 Historical trend analysis & visualization</li>
+      <li>🔔 Automatic abnormal health alerts</li>
+      <li>🌙 Light-Dark Theme Support</li>
+      <li>🔐 Secure Firebase Authentication</li>
+      <li>📱 Fully Responsive UI</li>
+    </ul>
+
+    <p>
+      Our mission is to create a reliable, accessible, and smart healthcare solution for everyone.
+      With continuous innovation, we aim to revolutionize the future of digital medical monitoring.
+    </p>
+  </div>
+</div>
+
+<script>
+// Mobile menu toggle
+document.getElementById("hamb").addEventListener("click", () => {
+  const m = document.getElementById("mobileMenu");
+  m.style.display = m.style.display === "flex" ? "none" : "flex";
+});
+
+// Dark mode load & toggle
+function applyTheme(dark){
+  document.body.classList.toggle("dark", dark);
+  localStorage.setItem("hcms_dark", dark);
+}
+document.getElementById("themeToggle").addEventListener("click",
+  () => applyTheme(!document.body.classList.contains("dark"))
+);
+if(localStorage.getItem("hcms_dark")==="true") applyTheme(true);
+</script>
+
+</body>
+</html>
