@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>About — HealthCare Monitoring</title>
+<title>Contact — HealthCare Monitoring</title>
 
 <link href="https://fonts.googleapis.com/css2?family=OnePlus+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
@@ -111,7 +111,7 @@
   --muted:#6b7280;
 }
 
-/* Dark Mode Upgrade */
+/* Dark Mode Fix */
 body.dark{
   background:#071828 !important;
   color:#e9eef5 !important;
@@ -120,31 +120,39 @@ body.dark .topbar{
   background:#071428 !important;
   box-shadow:0 10px 34px rgba(0,0,0,0.5) !important;
 }
-body.dark .nav a{
-  color:#e9eef5 !important;
-}
+body.dark .nav a{color:#e9eef5 !important}
 body.dark .card{
   background:#0d1b2b !important;
   color:#e9eef5 !important;
   box-shadow:0 18px 48px rgba(0,0,0,0.6) !important;
 }
+body.dark input, body.dark textarea{
+  background:#122033;
+  border:1px solid #2f4560;
+  color:#e9eef5;
+}
+body.dark input::placeholder,
+body.dark textarea::placeholder{
+  color:#9fb2c6;
+}
 body.dark .ghost{
-  border:1px solid rgba(255,255,255,0.4) !important;
-  color:white !important;
+  border:1px solid rgba(255,255,255,0.4);
+  color:white;
 }
 
-/* Basic Layout */
+/* Global Layout */
 *{box-sizing:border-box;margin:0;padding:0}
 body{
 font-family: 'OnePlus Sans', sans-serif !important;
   background:var(--bg);
   color:#111;
-  transition:background .25s,color .25s;
+  transition:background .25s, color .25s;
   opacity:0;
   animation:fadeIn .4s forwards .06s;
 }
 @keyframes fadeIn{to{opacity:1}}
 
+/* Navbar */
 .topbar{
   display:flex;
   align-items:center;
@@ -152,7 +160,7 @@ font-family: 'OnePlus Sans', sans-serif !important;
   padding:12px 20px;
   background:var(--nav-bg);
   color:#fff;
-  box-shadow:0 10px 26px rgba(13,71,161,0.15);
+  box-shadow:0 10px 28px rgba(13,71,161,0.15);
   position:sticky;
   top:0;
   z-index:90;
@@ -161,7 +169,11 @@ font-family: 'OnePlus Sans', sans-serif !important;
 .logo img{width:44px;height:44px;border-radius:8px}
 .brand h1{margin:0;font-size:18px;color:#fff;font-weight:600}
 
-.nav{display:flex;gap:12px;margin-left:12px}
+.nav{
+  display:flex;
+  gap:12px;
+  margin-left:12px;
+}
 .nav a{
   color:white;
   text-decoration:none;
@@ -175,7 +187,7 @@ font-family: 'OnePlus Sans', sans-serif !important;
   transform:translateY(-2px);
 }
 
-.actions{display:flex;align-items:center;gap:10px}
+.actions{display:flex;gap:10px}
 .ghost{
   background:transparent;
   border:1px solid rgba(255,255,255,0.2);
@@ -184,9 +196,14 @@ font-family: 'OnePlus Sans', sans-serif !important;
   cursor:pointer;
   color:white;
 }
-
-.hamb{display:none;background:transparent;border:none;color:#fff;font-size:22px}
-
+.hamb{
+  display:none;
+  background:transparent;
+  border:none;
+  color:#fff;
+  font-size:22px;
+  cursor:pointer;
+}
 /* Text readability fix */
 body.dark p,
 body.dark h1,
@@ -198,7 +215,7 @@ body.dark label {
 }
 
 
-/* Mobile menu */
+/* Mobile Menu */
 .mobile-menu{
   display:none;
   flex-direction:column;
@@ -213,8 +230,9 @@ body.dark label {
   font-weight:500;
 }
 
+/* Main Content */
 .container{
-  max-width:900px;
+  max-width:800px;
   margin:40px auto;
   padding:20px;
   animation:slideUp .4s ease-out .1s both;
@@ -227,38 +245,72 @@ body.dark label {
 .card{
   background:var(--card);
   padding:30px;
-  border-radius:14px;
+  border-radius:16px;
   box-shadow:0 14px 32px rgba(13,71,161,0.08);
   transition:transform .18s;
 }
-.card:hover{transform:translateY(-4px)}
+.card:hover{
+  transform:translateY(-4px);
+}
 
 h2{
-  margin-bottom:12px;
   font-size:26px;
   color:var(--accent);
+  margin-bottom:10px;
 }
 
 p{
   font-size:16px;
-  line-height:1.7;
-  margin-bottom:14px;
-  color:#333;
+  line-height:1.6;
+  margin-bottom:12px;
 }
 
-ul{
-  margin:12px 0 12px 20px;
+label{
+  font-weight:500;
+  margin-top:12px;
 }
-li{
-  margin-bottom:8px;
-  line-height:1.6;
+
+input, textarea{
+  width:100%;
+  padding:12px;
+  margin-top:4px;
+  border-radius:10px;
+  border:1px solid #ccd5e0;
+  font-size:15px;
+}
+
+textarea{height:130px;resize:none}
+
+.btn{
+  background:var(--accent);
+  color:#fff;
+  border:none;
+  padding:12px 16px;
+  margin-top:18px;
+  border-radius:10px;
+  cursor:pointer;
+  font-size:16px;
+  font-weight:600;
+  width:100%;
+  box-shadow:0 10px 28px rgba(13,71,161,0.18);
+  transition:.18s;
+}
+.btn:hover{
+  background:#0b3d8c;
+  transform:translateY(-2px);
+}
+
+footer{
+  padding:18px;
+  text-align:center;
+  font-size:14px;
+  color:var(--muted);
 }
 
 /* Responsive */
 @media(max-width:760px){
   .nav{display:none}
   .hamb{display:block}
-  .container{padding:10px}
 }
 
 /* --- FIX: Cards visible in dark mode --- */
@@ -296,18 +348,19 @@ body.dark #gAmb {
     <div class="logo">
       <img src="logo.jpeg" onerror="this.src='https://cdn-icons-png.flaticon.com/512/2966/2966327.png'" alt="">
     </div>
+
     <div class="brand"><h1>HealthCare Monitoring</h1></div>
 
     <nav class="nav">
       <a href="dashboard.html">Home</a>
-      <a href="about.html" class="active">About</a>
-      <a href="contact.html">Contact</a>
+      <a href="about.html">About</a>
+      <a href="contact.html" class="active">Contact</a>
     </nav>
   </div>
 
   <div class="actions">
     <button id="themeToggle" class="ghost">🌓</button>
-    <button class="hamb" id="hamb">☰</button>
+    <button id="hamb" class="hamb">☰</button>
   </div>
 </header>
 
@@ -321,68 +374,52 @@ body.dark #gAmb {
 <!-- MAIN CONTENT -->
 <div class="container">
   <div class="card">
-    <h2>About Our HealthCare Monitoring System</h2>
+    <h2>Contact Us</h2>
 
-    <p>
-      The <strong>Smart HealthCare Monitoring System</strong> is an advanced real-time patient
-      monitoring solution designed to ensure continuous tracking of vital health parameters.
-      It integrates IoT sensors, cloud-based analytics, and live data visualization to deliver
-      accurate medical insights instantly — anytime, anywhere.
-    </p>
+    <p>If you have any questions, feedback, or need support, feel free to reach out to us using the form below.</p>
 
-    <p>
-      Our system helps healthcare professionals and caretakers monitor critical parameters
-      such as:
-    </p>
+    <form id="contactForm">
+      <label>Your Name</label>
+      <input type="text" placeholder="Enter your name" required>
 
-    <ul>
-      <li>Real-time ECG waveform monitoring</li>
-      <li>Heart Rate (BPM)</li>
-      <li>Blood Oxygen (SpO₂)</li>
-      <li>Body & Ambient Temperature</li>
-      <li>Live alerts for abnormal readings</li>
-    </ul>
+      <label>Email Address</label>
+      <input type="email" placeholder="Enter your email" required>
 
-    <p>
-      The dashboard is engineered with high precision, ensuring smooth ECG graph rendering,
-      interactive historical data charts, and intelligent alert mechanisms for abnormal conditions.
-      It empowers doctors, hospitals, and individuals to make data-driven health decisions.
-    </p>
+      <label>Your Message</label>
+      <textarea placeholder="Write your message..." required></textarea>
 
-    <h3 style="margin-top:20px;color:var(--accent)">Key Features</h3>
-    <ul>
-      <li>⚡ Live ECG Streaming (1000+ data points)</li>
-      <li>🌡️ Intelligent temperature & SpO₂ detection</li>
-      <li>📊 Historical trend analysis & visualization</li>
-      <li>🔔 Automatic abnormal health alerts</li>
-      <li>🌙 Light-Dark Theme Support</li>
-      <li>🔐 Secure Firebase Authentication</li>
-      <li>📱 Fully Responsive UI</li>
-    </ul>
-
-    <p>
-      Our mission is to create a reliable, accessible, and smart healthcare solution for everyone.
-      With continuous innovation, we aim to revolutionize the future of digital medical monitoring.
-    </p>
+      <button class="btn" type="submit">Send Message</button>
+    </form>
   </div>
 </div>
 
+<footer>© <span id="yr"></span> HealthCare Monitoring System — Kanpur, India</footer>
+
 <script>
+// Year
+document.getElementById("yr").innerText = new Date().getFullYear();
+
 // Mobile menu toggle
 document.getElementById("hamb").addEventListener("click", () => {
   const m = document.getElementById("mobileMenu");
   m.style.display = m.style.display === "flex" ? "none" : "flex";
 });
 
-// Dark mode load & toggle
+// Theme 
 function applyTheme(dark){
   document.body.classList.toggle("dark", dark);
   localStorage.setItem("hcms_dark", dark);
 }
-document.getElementById("themeToggle").addEventListener("click",
-  () => applyTheme(!document.body.classList.contains("dark"))
-);
-if(localStorage.getItem("hcms_dark")==="true") applyTheme(true);
+document.getElementById("themeToggle")
+  .addEventListener("click", () => applyTheme(!document.body.classList.contains("dark")));
+if(localStorage.getItem("hcms_dark") === "true") applyTheme(true);
+
+// Dummy contact form
+document.getElementById("contactForm").addEventListener("submit", (e)=>{
+  e.preventDefault();
+  alert("Your message has been sent successfully!");
+  e.target.reset();
+});
 </script>
 
 </body>
