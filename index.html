@@ -2,267 +2,432 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ECG Monitor Login</title>
-  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link href="https://fonts.googleapis.com/css2?family=OnePlus+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <title>HealthCare Monitoring — Login</title>
+
+  <!-- Poppins font -->
+  <!-- <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet"> -->
+
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: Arial, sans-serif;
+    :root{
+      --nav-bg:#0D47A1;
+      --accent:#0D47A1;
+      --bg:#f4f8ff;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --muted-strong:#526070;
+      --glass: rgba(255,255,255,0.85);
+      --success:#2e7d32;
+      --danger:#d32f2f;
     }
 
-    body {
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: linear-gradient(135deg, #d7e9f7, #b5d3f0);
+    /* Basic reset */
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: 'OnePlus Sans', sans-serif !important;
+
+      background:var(--bg);
+      color:#111;
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+      transition:background .25s color .25s;
+      opacity:0;
+      animation:pageFade .42s forwards .06s;
+    }
+    @keyframes pageFade{to{opacity:1}}
+
+    /* Topbar */
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:12px 20px;
+      background:var(--nav-bg);
+      color:#fff;
+      box-shadow:0 10px 26px rgba(13,71,161,0.12);
+      position:sticky;
+      top:0;
+      z-index:90;
+      transform:translateY(0);
+    }
+    .left{
+      display:flex;
+      align-items:center;
+      gap:16px;
+    }
+    .logo{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .logo img{
+      width:44px;
+      height:44px;
+      border-radius:8px;
+      display:block;
+    }
+    .brand h1{
+      margin:0;
+      font-size:18px;
+      font-weight:600;
+      color:#fff;
+    }
+    .nav{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      margin-left:8px;
+    }
+    .nav a{
+      color:rgba(255,255,255,0.96);
+      text-decoration:none;
+      font-weight:600;
+      padding:8px 10px;
+      border-radius:8px;
+      transition:all .18s;
+      display:inline-block;
+    }
+    .nav a:hover{
+      transform:translateY(-3px);
+      background:rgba(255,255,255,0.06);
+    }
+    .nav a.active{
+      background:rgba(255,255,255,0.12);
+      box-shadow:0 6px 18px rgba(0,0,0,0.08);
     }
 
-    .login-card {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
-      border-radius: 18px;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
-      width: 400px;
-      padding: 40px 35px;
-      text-align: center;
+    .actions{
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .btn{
+      background:#fff;
+      color:var(--nav-bg);
+      padding:8px 12px;
+      border-radius:10px;
+      border:none;
+      cursor:pointer;
+      font-weight:600;
+      box-shadow:0 6px 18px rgba(13,71,161,0.08);
+      transition:transform .12s,box-shadow .12s;
+    }
+    .btn:active{transform:scale(.98)}
+    .ghost{
+      background:transparent;
+      border:1px solid rgba(255,255,255,0.12);
+      color:#fff;
+      padding:8px 10px;
+      border-radius:10px;
+      cursor:pointer;
+    }
+    .hamb{
+      display:none;
+      background:transparent;
+      border:none;
+      color:#fff;
+      font-size:22px;
+      cursor:pointer;
     }
 
-    .title {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      margin-bottom: 30px;
+    /* Text readability fix */
+body.dark p,
+body.dark h1,
+body.dark h2,
+body.dark h3,
+body.dark h4,
+body.dark label {
+  color: #e8edf5 !important;
+}
+
+
+    /* Mobile menu */
+    .mobile-menu{
+      display:none;
+      flex-direction:column;
+      gap:10px;
+      padding:12px 18px;
+      background:var(--nav-bg);
+      color:#fff;
+    }
+    .mobile-menu a{color:#fff;text-decoration:none;padding:8px 8px;border-radius:8px}
+
+    /* Main login card */
+    .center{
+      display:flex;
+      flex:1;
+      align-items:center;
+      justify-content:center;
+      padding:32px;
+    }
+    .card{
+      width:420px;
+      background:var(--card);
+      border-radius:14px;
+      padding:30px;
+      box-shadow:0 22px 44px rgba(13,71,161,0.06);
+      text-align:center;
+      transform:translateY(12px);
+      opacity:0;
+      animation:cardIn .48s forwards .12s;
+    }
+    @keyframes cardIn{to{transform:none;opacity:1}}
+    .title{display:flex;flex-direction:column;gap:8px;align-items:center;margin-bottom:18px}
+    .heartbeat{width:62px;height:62px;animation:heartbeat 1.4s infinite}
+    @keyframes heartbeat{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+    input{
+      width:100%;
+      padding:12px;
+      border-radius:10px;
+      border:1px solid #e6eefb;
+      font-size:15px;
+      background:transparent;
+      color:inherit;
+    }
+    input:focus{outline:none;box-shadow:0 10px 30px rgba(13,71,161,0.06);border-color:var(--accent)}
+    .btn-row{display:flex;gap:12px;margin-top:14px}
+    .muted{font-size:13px;color:var(--muted);margin-top:12px}
+    .error{color:var(--danger)}
+    .success{color:var(--success)}
+
+    footer{
+      padding:14px;
+      text-align:center;
+      color:var(--muted);
+      font-size:13px;
     }
 
-    .title img {
-      width: 45px;
-      height: 45px;
-      animation: heartbeat 1.5s infinite;
+    /* Nav link underline animation */
+    .nav a::after{
+      content:'';
+      display:block;
+      height:3px;
+      background:rgba(255,255,255,0.15);
+      border-radius:3px;
+      margin-top:6px;
+      transform:scaleX(0);
+      transform-origin:left;
+      transition:transform .2s;
+    }
+    .nav a:hover::after{transform:scaleX(1)}
+
+    /* Dark mode improved styles (high contrast) */
+    body.dark{
+      color:#e9eef5;
+      background:#071828;
+    }
+    body.dark .topbar{
+      background:#071428;
+      box-shadow:0 10px 32px rgba(0,0,0,0.6);
+    }
+    body.dark .nav a{color:#e9eef5}
+    body.dark .nav a:hover{background:rgba(255,255,255,0.06)}
+    body.dark .logo h1{color:#e9eef5}
+    body.dark .card{
+      background:#0d1b2b;
+      color:#e9eef5;
+      box-shadow:0 18px 48px rgba(0,0,0,0.55);
+    }
+    body.dark input{
+      background:#122033;
+      border:1px solid #29415c;
+      color:#e9eef5;
+    }
+    body.dark input::placeholder{color:#93a2b7}
+    body.dark .muted{color:#bfc7d0}
+    body.dark footer{color:#bfc7d0}
+    body.dark .ghost{color:#fff;border:1px solid rgba(255,255,255,0.36)}
+
+    /* Responsive */
+    @media(max-width:760px){
+      .nav{display:none}
+      .hamb{display:block}
+      .card{width:92%}
+      .mobile-menu{display:flex}
     }
 
-    @keyframes heartbeat {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.15); }
-    }
+    /* --- FIX: Cards visible in dark mode --- */
+body.dark .card {
+  background: #142235 !important;        /* Soft dark blue */
+  border: 1px solid #2a3c55 !important;  /* Visible outline */
+  color: #e6ebf3 !important;             /* Readable text */
+  box-shadow: 0 12px 26px rgba(0,0,0,0.6) !important;
+}
 
-    .title h1 {
-      font-size: 26px;
-      color: #0d47a1;
-    }
+/* Fix text inside value boxes */
+body.dark .valbox {
+  background: #1b2d44 !important;
+  color: #e6ebf3 !important;
+}
 
-    form {
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-    }
+/* Fix small text */
+body.dark .small {
+  color: #c8d1df !important;
+}
 
-    input {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      font-size: 15px;
-      transition: 0.3s;
-    }
+/* Fix gauge container visibility */
+body.dark #gBody,
+body.dark #gAmb {
+  background: transparent !important;
+}
 
-    input:focus {
-      border-color: #2196f3;
-      box-shadow: 0 0 6px rgba(33, 150, 243, 0.3);
-    }
-
-    #errorMsg, #successMsg {
-      font-size: 14px;
-      min-height: 1.2em;
-    }
-
-    #errorMsg { color: #d32f2f; }
-    #successMsg { color: #388e3c; }
-
-    .btn-group {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      margin-top: 10px;
-    }
-
-    .btn {
-      flex: 1;
-      padding: 12px;
-      border: none;
-      border-radius: 8px;
-      color: #fff;
-      font-size: 16px;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    .login-btn { background-color: #2196f3; }
-    .login-btn:hover { background-color: #1976d2; }
-
-    .signup-btn { background-color: #43a047; }
-    .signup-btn:hover { background-color: #2e7d32; }
-
-    .forgot-link {
-      font-size: 14px;
-      color: #0d47a1;
-      text-decoration: none;
-      margin-top: -5px;
-      display: inline-block;
-    }
-    .forgot-link:hover {
-      text-decoration: underline;
-    }
-
-    .footer-text {
-      margin-top: 25px;
-      font-size: 13px;
-      color: #555;
-    }
-
-    .footer-text span {
-      color: #0d47a1;
-      font-weight: 600;
-    }
   </style>
 </head>
-
 <body>
-  <div class="login-card">
-    <div class="title">
-      <img src="https://cdn-icons-png.flaticon.com/512/2966/2966327.png" alt="Heart Icon" />
-      <h1>ECG Monitor Login</h1>
+
+  <!-- Topbar -->
+  <header class="topbar" role="navigation" aria-label="Main navigation">
+    <div class="left" style="align-items:center">
+      <div class="logo" aria-hidden="true">
+        <img src="https://cdn-icons-png.flaticon.com/512/2966/2966327.png" alt="HCMS logo">
+      </div>
+
+      <div class="brand" aria-hidden="true">
+        <h1>HealthCare Monitoring</h1>
+      </div>
+
+      <nav class="nav" id="navLinks" aria-label="Primary">
+        <a href="dashboard.html" id="link-home">Home</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+      </nav>
     </div>
 
-    <form id="login-form">
-      <input id="email" type="email" placeholder="Enter Email" required />
-      <input id="password" type="password" placeholder="Enter Password" required />
-      
-      <a href="#" id="forgot-password" class="forgot-link">Forgot Password?</a>
+    <div class="actions" role="group" aria-label="Actions">
+      <button id="themeBtn" class="ghost" aria-pressed="false" title="Toggle dark mode">🌓</button>
+      <button id="hamb" class="hamb" aria-expanded="false" aria-controls="mobileMenu">☰</button>
+    </div>
+  </header>
 
-      <p id="errorMsg"></p>
-      <p id="successMsg"></p>
-
-      <div class="btn-group">
-        <button type="submit" class="btn login-btn">Login</button>
-        <button type="button" id="signup-btn" class="btn signup-btn">Sign Up</button>
-      </div>
-    </form>
-
-    <p class="footer-text">
-      A <span>Smart Healthcare</span> System for Real-Time ECG Monitoring
-    </p>
+  <!-- Mobile menu -->
+  <div id="mobileMenu" class="mobile-menu" style="display:none">
+    <a href="dashboard.html">Home</a>
+    <a href="about.html">About</a>
+    <a href="contact.html">Contact</a>
   </div>
 
-  <!-- Firebase SDKs -->
+  <!-- Main login card -->
+  <main class="center" role="main">
+    <div class="card" aria-live="polite">
+      <div class="title">
+        <img class="heartbeat" src="https://cdn-icons-png.flaticon.com/512/2966/2966327.png" alt="heart logo">
+        <h2 style="margin:0;color:var(--accent)">ECG Monitor Login</h2>
+        <div class="muted">Secure access to your health dashboard</div>
+      </div>
+
+      <form id="login-form" autocomplete="on" novalidate>
+        <input id="email" type="email" placeholder="Enter Email" required />
+        <div style="height:10px"></div>
+        <input id="password" type="password" placeholder="Enter Password" required />
+        <div style="height:12px"></div>
+
+        <a href="#" id="forgot-password" style="color:var(--accent);display:inline-block;margin-bottom:8px">Forgot Password?</a>
+
+        <p id="errorMsg" class="error" style="min-height:18px"></p>
+        <p id="successMsg" class="success" style="min-height:18px"></p>
+
+        <div class="btn-row">
+          <button type="submit" class="btn" style="flex:1">Login</button>
+          <button type="button" id="signup-btn" class="btn" style="flex:1;background:#43a047">Sign Up</button>
+        </div>
+
+        <div class="muted" style="margin-top:12px">A <strong style="color:var(--accent)">Smart Healthcare</strong> System for Real-Time ECG Monitoring</div>
+      </form>
+    </div>
+  </main>
+
+  <footer>© <span id="year"></span> HealthCare Monitoring System — Kanpur, India</footer>
+
+  <!-- Firebase SDKs (v8 for compatibility with your login code) -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // Firebase configuration
-      const firebaseConfig = {
-        apiKey: "AIzaSyBwGtPqCsq9G74bem7C6qWuJNDoqTH6sts",
-        authDomain: "iot-health-monitor-f0530.firebaseapp.com",
-        databaseURL: "https://iot-health-monitor-f0530-default-rtdb.firebaseio.com",
-        projectId: "iot-health-monitor-f0530",
-        storageBucket: "iot-health-monitor-f0530.firebasestorage.app",
-        messagingSenderId: "1036078967425",
-        appId: "1:1036078967425:web:d01ccc6f982943c2aebb80",
-        measurementId: "G-KX9B5SY10C"
-      };
+    // small helpers
+    document.getElementById('year').innerText = new Date().getFullYear();
+    const navLinks = document.getElementById('navLinks');
+    const mobileMenu = document.getElementById('mobileMenu');
+    const hamb = document.getElementById('hamb');
+    const themeBtn = document.getElementById('themeBtn');
 
-      // Initialize Firebase
-      firebase.initializeApp(firebaseConfig);
-      const auth = firebase.auth();
+    // mobile toggle
+    hamb.addEventListener('click', () => {
+      const visible = mobileMenu.style.display === 'flex';
+      mobileMenu.style.display = visible ? 'none' : 'flex';
+      hamb.setAttribute('aria-expanded', String(!visible));
+    });
 
-      // DOM elements
-      const loginForm = document.getElementById('login-form');
-      const emailInput = document.getElementById('email');
-      const passwordInput = document.getElementById('password');
-      const signupButton = document.getElementById('signup-btn');
-      const forgotPasswordLink = document.getElementById('forgot-password');
-      const errorMsg = document.getElementById('errorMsg');
-      const successMsg = document.getElementById('successMsg');
+    // theme handling (persist)
+    function applyTheme(dark){
+      document.body.classList.toggle('dark', !!dark);
+      document.querySelector('.topbar').style.background = !!dark ? '#071428' : 'var(--nav-bg)';
+      themeBtn.setAttribute('aria-pressed', !!dark);
+      localStorage.setItem('hcms_dark', !!dark);
+    }
+    themeBtn.addEventListener('click', () => applyTheme(!document.body.classList.contains('dark')));
+    if(localStorage.getItem('hcms_dark') === 'true') applyTheme(true);
 
-      // Automatically redirect if already logged in
-      auth.onAuthStateChanged((user) => {
-        if (user) {
-          window.location.href = 'dashboard.html';
-        }
-      });
+    // Firebase initialization (existing)
+    const firebaseConfig = {
+      apiKey: "AIzaSyBwGtPqCsq9G74bem7C6qWuJNDoqTH6sts",
+      authDomain: "iot-health-monitor-f0530.firebaseapp.com",
+      databaseURL: "https://iot-health-monitor-f0530-default-rtdb.firebaseio.com",
+      projectId: "iot-health-monitor-f0530",
+      storageBucket: "iot-health-monitor-f0530.firebasestorage.app",
+      messagingSenderId: "1036078967425",
+      appId: "1:1036078967425:web:d01ccc6f982943c2aebb80",
+      measurementId: "G-KX9B5SY10C"
+    };
+    try { firebase.initializeApp(firebaseConfig); } catch(e) { /* ignore if already initialized */ }
+    const auth = firebase.auth();
 
-      // Login
-      loginForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const email = emailInput.value.trim();
-        const password = passwordInput.value.trim();
-        errorMsg.textContent = '';
-        successMsg.textContent = '';
+    // DOM refs
+    const loginForm = document.getElementById('login-form');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const signupButton = document.getElementById('signup-btn');
+    const forgotPasswordLink = document.getElementById('forgot-password');
+    const errorMsg = document.getElementById('errorMsg');
+    const successMsg = document.getElementById('successMsg');
 
-        if (!email || !password) {
-          errorMsg.textContent = 'Please enter both email and password.';
-          return;
-        }
+    // redirect if already logged in
+    auth.onAuthStateChanged(user => { if (user) window.location.href = 'dashboard.html'; });
 
-        auth.signInWithEmailAndPassword(email, password)
-          .then(() => {
-            console.log('Login successful');
-          })
-          .catch((error) => {
-            errorMsg.textContent = error.message;
-          });
-      });
+    // Login
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      errorMsg.textContent = ''; successMsg.textContent = '';
+      const email = emailInput.value.trim(), pwd = passwordInput.value.trim();
+      if (!email || !pwd) { errorMsg.textContent = 'Please enter both email and password.'; return; }
+      auth.signInWithEmailAndPassword(email, pwd)
+        .catch(err => { errorMsg.textContent = err.message; });
+    });
 
-      // Sign Up
-      signupButton.addEventListener('click', () => {
-        const email = emailInput.value.trim();
-        const password = passwordInput.value.trim();
-        errorMsg.textContent = '';
-        successMsg.textContent = '';
+    // Sign Up
+    signupButton.addEventListener('click', () => {
+      errorMsg.textContent = ''; successMsg.textContent = '';
+      const email = emailInput.value.trim(), pwd = passwordInput.value.trim();
+      if (!email || !pwd) { errorMsg.textContent = 'Please enter both email and password to sign up.'; return; }
+      auth.createUserWithEmailAndPassword(email, pwd)
+        .then(()=> { alert('✅ Account created! Redirecting to Home...'); window.location.href = 'dashboard.html'; })
+        .catch(err=> errorMsg.textContent = err.message);
+    });
 
-        if (!email || !password) {
-          errorMsg.textContent = 'Please enter both email and password to sign up.';
-          return;
-        }
-
-        auth.createUserWithEmailAndPassword(email, password)
-          .then(() => {
-            alert('✅ Account created successfully! Redirecting to Dashboard...');
-            window.location.href = 'dashboard.html';
-          })
-          .catch((error) => {
-            errorMsg.textContent = error.message;
-          });
-      });
-
-      // Forgot Password
-      forgotPasswordLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        const email = emailInput.value.trim();
-        errorMsg.textContent = '';
-        successMsg.textContent = '';
-
-        if (!email) {
-          errorMsg.textContent = 'Please enter your email to reset your password.';
-          return;
-        }
-
-        auth.sendPasswordResetEmail(email)
-          .then(() => {
-            successMsg.textContent = '✅ Password reset email sent! Check your inbox.';
-            console.log('Password reset email sent to:', email);
-          })
-          .catch((error) => {
-            errorMsg.textContent = error.message;
-            console.error('Password Reset Error:', error.message);
-          });
-      });
+    // Forgot password
+    forgotPasswordLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      errorMsg.textContent = ''; successMsg.textContent = '';
+      const email = emailInput.value.trim();
+      if (!email) { errorMsg.textContent = 'Please enter your email to reset your password.'; return; }
+      auth.sendPasswordResetEmail(email)
+        .then(()=> successMsg.textContent = '✅ Password reset email sent! Check inbox.')
+        .catch(err => errorMsg.textContent = err.message);
     });
   </script>
 </body>
